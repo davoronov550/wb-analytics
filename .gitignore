@@ -1,0 +1,28 @@
+# --- Claude / agent artifacts (excluded from the repo by request) ---
+.claude/
+
+# --- Python / Django ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+*.sqlite3
+/backend/staticfiles/
+/backend/media/
+
+# --- Node / React ---
+node_modules/
+/frontend/dist/
+/frontend/.vite/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
