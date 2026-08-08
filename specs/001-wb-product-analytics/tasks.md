@@ -40,10 +40,10 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 ### Shared kernel
 
 - [ ] T007 [P] FAILING tests for value objects in `backend/tests/domain/test_value_objects.py` (Money `/100`+≥0, Rating 0–5, ReviewsCount ≥0)
-- [ ] T008 [P] Implement `backend/src/shared/domain/value_objects.py` to pass T007
-- [ ] T009 Define `backend/src/shared/application/ports.py` (`EventBusPort`, `ClockPort`, `TaskQueuePort`) and `backend/src/shared/events.py` (`ProductsCollected`, `PriceChanged`)
-- [ ] T010 [P] FAILING test `backend/tests/adapters/test_event_bus.py` (publish → registered subscribers invoked; sync in-process)
-- [ ] T011 [P] Implement `backend/src/shared/adapters/` `InProcessEventBus` (+ subscriber registry) and `SystemClock` to pass T010
+- [x] T008 [P] Implement `backend/src/shared/domain/value_objects.py` to pass T007
+- [x] T009 Define `backend/src/shared/application/ports.py` (`EventBusPort`, `ClockPort`, `TaskQueuePort`) and `backend/src/shared/events.py` (`ProductsCollected`, `PriceChanged`)
+- [x] T010 [P] FAILING test `backend/tests/adapters/test_event_bus.py` (publish → registered subscribers invoked; sync in-process)
+- [x] T011 [P] Implement `backend/src/shared/adapters/` `InProcessEventBus` (+ subscriber registry) and `SystemClock` to pass T010
 
 ### Catalog domain & application
 
