@@ -39,7 +39,7 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 ### Shared kernel
 
-- [ ] T007 [P] FAILING tests for value objects in `backend/tests/domain/test_value_objects.py` (Money `/100`+≥0, Rating 0–5, ReviewsCount ≥0)
+- [x] T007 [P] FAILING tests for value objects in `backend/tests/domain/test_value_objects.py` (Money `/100`+≥0, Rating 0–5, ReviewsCount ≥0)
 - [x] T008 [P] Implement `backend/src/shared/domain/value_objects.py` to pass T007
 - [x] T009 Define `backend/src/shared/application/ports.py` (`EventBusPort`, `ClockPort`, `TaskQueuePort`) and `backend/src/shared/events.py` (`ProductsCollected`, `PriceChanged`)
 - [x] T010 [P] FAILING test `backend/tests/adapters/test_event_bus.py` (publish → registered subscribers invoked; sync in-process)
@@ -53,11 +53,11 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 ### Catalog persistence (real PostgreSQL)
 
-- [ ] T015 Implement `backend/src/catalog/adapters/outbound/persistence/models.py` + `apps.py` (`ProductModel`, `SearchQueryModel`; unique `wb_id`; filter/order indexes)
-- [ ] T016 Generate migration `backend/src/catalog/adapters/outbound/persistence/migrations/0001_initial.py`
-- [ ] T017 Implement `backend/src/catalog/adapters/outbound/persistence/mappers.py` (ORM↔domain)
-- [ ] T018 FAILING repo integration test `backend/tests/adapters/test_product_repository.py` (upsert idempotency by `wb_id`; list filter on `sale_price` + ordering + pagination) — real PG
-- [ ] T019 Implement `DjangoProductRepository` (`upsert_many`, `list`) in `.../persistence/repository.py` to pass T018
+- [x] T015 Implement `backend/src/catalog/adapters/outbound/persistence/models.py` + `apps.py` (`ProductModel`, `SearchQueryModel`; unique `wb_id`; filter/order indexes)
+- [x] T016 Generate migration `backend/src/catalog/adapters/outbound/persistence/migrations/0001_initial.py`
+- [x] T017 Implement `backend/src/catalog/adapters/outbound/persistence/mappers.py` (ORM↔domain)
+- [x] T018 FAILING repo integration test `backend/tests/adapters/test_product_repository.py` (upsert idempotency by `wb_id`; list filter on `sale_price` + ordering + pagination) — real PG
+- [x] T019 Implement `DjangoProductRepository` (`upsert_many`, `list`) in `.../persistence/repository.py` to pass T018
 
 ### Cross-cutting
 
