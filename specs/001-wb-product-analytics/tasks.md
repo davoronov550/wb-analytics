@@ -47,9 +47,9 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 ### Catalog domain & application
 
-- [ ] T012 [P] FAILING catalog domain tests `backend/tests/domain/test_product.py`, `test_discount.py` (invariants, `sale_price≤price` clamp, discount abs/pct, no ÷0)
-- [ ] T013 [P] Implement `backend/src/catalog/domain/product.py` and `discount.py` to pass T012
-- [ ] T014 Define `backend/src/catalog/application/` `dto.py`, `errors.py`, `ports/outbound.py` (`ProductRepositoryPort`, `WbCatalogGatewayPort`), `ports/inbound.py` (`CollectProducts`, `ListProducts`)
+- [x] T012 [P] FAILING catalog domain tests `backend/tests/domain/test_product.py`, `test_discount.py` (invariants, `sale_price≤price` clamp, discount abs/pct, no ÷0)
+- [x] T013 [P] Implement `backend/src/catalog/domain/product.py` and `discount.py` to pass T012
+- [x] T014 Define `backend/src/catalog/application/` `dto.py`, `errors.py`, `ports/outbound.py` (`ProductRepositoryPort`, `WbCatalogGatewayPort`), `ports/inbound.py` (`CollectProducts`, `ListProducts`)
 
 ### Catalog persistence (real PostgreSQL)
 
