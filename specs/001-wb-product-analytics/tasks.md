@@ -61,8 +61,8 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 ### Cross-cutting
 
-- [ ] T020 [P] DRF exception handler (infra/domain errors → 400/502, no leak) in `backend/src/catalog/adapters/inbound/http/exceptions.py` + structured logging in `config/`
-- [ ] T021 Implement catalog composition root `backend/src/catalog/composition/container.py` (wires repo, event bus, clock) — depends on T014, T019, T009, T011
+- [x] T020 [P] DRF exception handler (infra/domain errors → 400/502, no leak) in `backend/src/catalog/adapters/inbound/http/exceptions.py` + structured logging in `config/`
+- [x] T021 Implement catalog composition root `backend/src/catalog/composition/container.py` (wires repo, event bus, clock) — depends on T014, T019, T009, T011
 
 **Checkpoint**: shared kernel + catalog core + event bus ready.
 

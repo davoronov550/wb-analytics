@@ -6,6 +6,7 @@ just wires Django/DRF/CORS/Celery and registers each context's persistence app.
 Context apps and their URL includes are added incrementally as their model/view
 tasks land (see the task references below), so the project boots at every step.
 """
+
 import os
 import sys
 from pathlib import Path
@@ -128,7 +129,7 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",  # catalog reads are public (FR-044)
     ],
-    # "EXCEPTION_HANDLER": "catalog.adapters.inbound.http.exceptions.exception_handler",  # T020
+    "EXCEPTION_HANDLER": "catalog.adapters.inbound.http.exceptions.exception_handler",  # T020
 }
 
 # --- CORS (frontend dev origin) ---
@@ -153,3 +154,25 @@ EVENT_PUBLISHER = os.environ.get("EVENT_PUBLISHER", "inprocess")
 
 # --- Price-history retention (FE-04; T066) ---
 SNAPSHOT_RETENTION_DAYS = int(os.environ.get("SNAPSHOT_RETENTION_DAYS", "90"))
+
+# --- Structured logging (Constitution VIII) ---
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "structured": {
+            "format": "%(asctime)s %(levelname)s %(name)s %(message)s",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "structured",
+        },
+    },
+    "root": {"handlers": ["console"], "level": os.environ.get("LOG_LEVEL", "INFO")},
+    "loggers": {
+        # Per-context loggers (catalog, analytics, ...) inherit the console handler.
+        "catalog": {"level": "INFO"},
+    },
+}

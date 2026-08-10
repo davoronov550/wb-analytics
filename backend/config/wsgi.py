@@ -1,4 +1,5 @@
 """WSGI entry point."""
+
 import os
 import sys
 from pathlib import Path
