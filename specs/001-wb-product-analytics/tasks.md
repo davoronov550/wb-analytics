@@ -72,14 +72,14 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: `manage.py parse_wb "наушники"` → ≥100 products, 5 fields, 0 dupes on re-run.
 
-- [ ] T022 [P] [US1] Record `backend/tests/fixtures/wb_search.json` + FAILING gateway test `backend/tests/adapters/test_wb_gateway.py` (respx: pagination, field fallbacks, `/100`)
-- [ ] T023 [P] [US1] FAILING use-case test `backend/tests/application/test_collect_products.py` (fake gateway/repo/eventbus/clock; idempotency, per-item skip, `ProductsCollected` published)
-- [ ] T024 [P] [US1] FAILING CLI smoke test `backend/tests/adapters/test_parse_wb_command.py`
-- [ ] T025 [US1] Implement `backend/src/catalog/adapters/outbound/wildberries/payload.py` (fallbacks; skip missing `wb_id`/`name`)
-- [ ] T026 [US1] Implement `HttpxWbCatalogGateway` in `.../wildberries/gateway.py` (paginate to `WB_MAX_PAGES`, timeout; resilience added in US6)
-- [ ] T027 [US1] Implement `CollectProducts` use case `backend/src/catalog/application/use_cases/collect_products.py` (gateway→domain→`upsert_many`→publish `ProductsCollected`; SearchQuery run state)
-- [ ] T028 [US1] Implement `parse_wb` command `backend/src/catalog/adapters/inbound/cli/management/commands/parse_wb.py`
-- [ ] T029 [US1] Wire US1 (gateway) into catalog composition root
+- [x] T022 [P] [US1] Record `backend/tests/fixtures/wb_search.json` + FAILING gateway test `backend/tests/adapters/test_wb_gateway.py` (respx: pagination, field fallbacks, `/100`)
+- [x] T023 [P] [US1] FAILING use-case test `backend/tests/application/test_collect_products.py` (fake gateway/repo/eventbus/clock; idempotency, per-item skip, `ProductsCollected` published)
+- [x] T024 [P] [US1] FAILING CLI smoke test `backend/tests/adapters/test_parse_wb_command.py`
+- [x] T025 [US1] Implement `backend/src/catalog/adapters/outbound/wildberries/payload.py` (fallbacks; skip missing `wb_id`/`name`)
+- [x] T026 [US1] Implement `HttpxWbCatalogGateway` in `.../wildberries/gateway.py` (paginate to `WB_MAX_PAGES`, timeout; resilience added in US6)
+- [x] T027 [US1] Implement `CollectProducts` use case `backend/src/catalog/application/use_cases/collect_products.py` (gateway→domain→`upsert_many`→publish `ProductsCollected`; SearchQuery run state)
+- [x] T028 [US1] Implement `parse_wb` command `backend/src/catalog/adapters/inbound/cli/management/commands/parse_wb.py`
+- [x] T029 [US1] Wire US1 (gateway) into catalog composition root
 
 **Checkpoint**: data can be collected via CLI.
 

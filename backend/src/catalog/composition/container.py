@@ -8,8 +8,12 @@ and task queue; ListProducts (T036) needs the repository.
 
 from __future__ import annotations
 
+from django.conf import settings
+
 from catalog.adapters.outbound.persistence.repository import DjangoProductRepository
-from catalog.application.ports.outbound import ProductRepositoryPort
+from catalog.adapters.outbound.wildberries.gateway import HttpxWbCatalogGateway
+from catalog.application.ports.outbound import ProductRepositoryPort, WbCatalogGatewayPort
+from catalog.application.use_cases.collect_products import CollectProducts
 from shared.application.ports import ClockPort, EventBusPort
 from shared.composition import get_clock, get_event_bus
 
@@ -24,3 +28,21 @@ def get_catalog_event_bus() -> EventBusPort:
 
 def get_catalog_clock() -> ClockPort:
     return get_clock()
+
+
+def build_wb_gateway() -> WbCatalogGatewayPort:
+    return HttpxWbCatalogGateway(
+        dest=settings.WB_DEST,
+        timeout=settings.WB_REQUEST_TIMEOUT,
+    )
+
+
+def build_collect_products() -> CollectProducts:
+    """Assemble the CollectProducts use case (used by the CLI and, later, Celery)."""
+    return CollectProducts(
+        gateway=build_wb_gateway(),
+        repository=get_product_repository(),
+        event_bus=get_catalog_event_bus(),
+        clock=get_catalog_clock(),
+        default_max_pages=settings.WB_MAX_PAGES,
+    )

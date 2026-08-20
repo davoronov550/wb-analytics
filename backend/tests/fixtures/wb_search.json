@@ -1,0 +1,25 @@
+{
+  "data": {
+    "products": [
+      {
+        "id": 179421376,
+        "name": "Наушники беспроводные TWS",
+        "brand": "NoName",
+        "sizes": [
+          { "price": { "basic": 599900, "product": 299900 } }
+        ],
+        "reviewRating": 4.7,
+        "feedbacks": 1234
+      },
+      {
+        "id": 180002233,
+        "name": "Гарнитура игровая",
+        "brand": "NoName",
+        "priceU": 1000000,
+        "salePriceU": 850000,
+        "rating": 4.1,
+        "feedbacks": 50
+      }
+    ]
+  }
+}
