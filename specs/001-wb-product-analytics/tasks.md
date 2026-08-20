@@ -113,12 +113,12 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: histogram bars sum to row count; line-chart points match (discount,rating); components render on mock data.
 
-- [ ] T045 [P] [US3] FAILING `frontend/src/lib/histogram.test.ts` (equal-width buckets; sum=len; empty/degenerate)
-- [ ] T046 [P] [US3] FAILING render tests `frontend/src/components/charts/{PriceHistogram,DiscountVsRatingChart}.test.tsx`
-- [ ] T047 [US3] Implement `frontend/src/lib/histogram.ts`
-- [ ] T048 [P] [US3] Implement `frontend/src/components/charts/PriceHistogram.tsx` (Recharts BarChart)
-- [ ] T049 [P] [US3] Implement `frontend/src/components/charts/DiscountVsRatingChart.tsx` (Recharts Line/Scatter)
-- [ ] T050 [US3] Wire both charts into `App.tsx` sharing the filtered dataset/state (FR-015)
+- [x] T045 [P] [US3] FAILING `frontend/src/lib/histogram.test.ts` (equal-width buckets; sum=len; empty/degenerate)
+- [x] T046 [P] [US3] FAILING render tests `frontend/src/components/charts/{PriceHistogram,DiscountVsRatingChart}.test.tsx`
+- [x] T047 [US3] Implement `frontend/src/lib/histogram.ts`
+- [x] T048 [P] [US3] Implement `frontend/src/components/charts/PriceHistogram.tsx` (Recharts BarChart)
+- [x] T049 [P] [US3] Implement `frontend/src/components/charts/DiscountVsRatingChart.tsx` (Recharts Line/Scatter)
+- [x] T050 [US3] Wire both charts into `App.tsx` sharing the filtered dataset/state (FR-015)
 
 **Checkpoint**: Core MVP (Phase A) complete.
 

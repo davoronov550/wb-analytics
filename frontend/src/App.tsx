@@ -1,3 +1,5 @@
+import { DiscountVsRatingChart } from "./components/charts/DiscountVsRatingChart";
+import { PriceHistogram } from "./components/charts/PriceHistogram";
 import { PriceRangeSlider } from "./components/Filters/PriceRangeSlider";
 import { RatingFilter } from "./components/Filters/RatingFilter";
 import { ReviewsFilter } from "./components/Filters/ReviewsFilter";
@@ -35,6 +37,10 @@ export default function App() {
         {loading ? "Загрузка…" : `Найдено: ${count}`}
         {error ? ` · ${error}` : ""}
       </p>
+      <section className="charts">
+        <PriceHistogram products={products} />
+        <DiscountVsRatingChart products={products} />
+      </section>
       <ProductTable products={products} sort={sort} onSortChange={setSort} />
     </main>
   );
