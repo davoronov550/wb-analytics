@@ -14,6 +14,7 @@ from catalog.adapters.outbound.persistence.repository import DjangoProductReposi
 from catalog.adapters.outbound.wildberries.gateway import HttpxWbCatalogGateway
 from catalog.application.ports.outbound import ProductRepositoryPort, WbCatalogGatewayPort
 from catalog.application.use_cases.collect_products import CollectProducts
+from catalog.application.use_cases.list_products import ListProducts
 from shared.application.ports import ClockPort, EventBusPort
 from shared.composition import get_clock, get_event_bus
 
@@ -46,3 +47,8 @@ def build_collect_products() -> CollectProducts:
         clock=get_catalog_clock(),
         default_max_pages=settings.WB_MAX_PAGES,
     )
+
+
+def build_list_products() -> ListProducts:
+    """Assemble the ListProducts use case (used by the HTTP list view)."""
+    return ListProducts(repository=get_product_repository())

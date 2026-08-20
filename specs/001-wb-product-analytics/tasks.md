@@ -89,21 +89,21 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: `GET /api/products/?min_price=5000&min_rating=4&min_reviews=100&ordering=-price` returns correct rows; UI updates live.
 
-- [ ] T030 [P] [US2] FAILING use-case test `backend/tests/application/test_list_products.py` (fake repo; filter+ordering+pagination)
-- [ ] T031 [P] [US2] FAILING HTTP mapping test `backend/tests/adapters/test_http_products.py` (params→`ProductFilter`/`Ordering`; invalid→400)
-- [ ] T032 [P] [US2] FAILING e2e `backend/tests/e2e/test_products_api.py` (`GET /api/products/` filters+ordering+400)
-- [ ] T033 [P] [US2] FAILING frontend test `frontend/src/hooks/useFilters.test.ts` (filter/sort state, URL sync)
-- [ ] T034 [P] [US2] FAILING frontend test `frontend/src/hooks/useProducts.test.ts` (filter change → debounced refetch)
-- [ ] T035 [P] [US2] FAILING frontend test `frontend/src/components/ProductTable.test.tsx` (5 columns; header click emits ordering change, no client re-sort)
-- [ ] T036 [US2] Implement `ListProducts` use case `backend/src/catalog/application/use_cases/list_products.py`
-- [ ] T037 [US2] Implement `backend/src/catalog/adapters/inbound/http/request_filters.py` (django-filter/OrderingFilter in adapter; price on `sale_price`)
-- [ ] T038 [US2] Implement `ProductListView` + `ProductView` serializer + pagination (default/cap 1000) + `urls.py`
-- [ ] T039 [US2] Wire US2 (`ListProducts`) into catalog composition
-- [ ] T040 [P] [US2] Implement `frontend/src/types.ts` + `frontend/src/api/products.ts`
-- [ ] T041 [US2] Implement `useFilters` (URL-synced filter+`Ordering`) and `useProducts` (debounced refetch) in `frontend/src/hooks/`
-- [ ] T042 [P] [US2] Implement `frontend/src/components/Filters/{PriceRangeSlider,RatingFilter,ReviewsFilter}.tsx`
-- [ ] T043 [US2] Implement `frontend/src/components/ProductTable.tsx` (TanStack manual/controlled sorting → `ordering=` param; render as received)
-- [ ] T044 [US2] Implement `frontend/src/components/QueryBar.tsx` + wire filters/table in `frontend/src/App.tsx`
+- [x] T030 [P] [US2] FAILING use-case test `backend/tests/application/test_list_products.py` (fake repo; filter+ordering+pagination)
+- [x] T031 [P] [US2] FAILING HTTP mapping test `backend/tests/adapters/test_http_products.py` (params→`ProductFilter`/`Ordering`; invalid→400)
+- [x] T032 [P] [US2] FAILING e2e `backend/tests/e2e/test_products_api.py` (`GET /api/products/` filters+ordering+400)
+- [x] T033 [P] [US2] FAILING frontend test `frontend/src/hooks/useFilters.test.ts` (filter/sort state, URL sync)
+- [x] T034 [P] [US2] FAILING frontend test `frontend/src/hooks/useProducts.test.ts` (filter change → debounced refetch)
+- [x] T035 [P] [US2] FAILING frontend test `frontend/src/components/ProductTable.test.tsx` (5 columns; header click emits ordering change, no client re-sort)
+- [x] T036 [US2] Implement `ListProducts` use case `backend/src/catalog/application/use_cases/list_products.py`
+- [x] T037 [US2] Implement `backend/src/catalog/adapters/inbound/http/request_filters.py` (django-filter/OrderingFilter in adapter; price on `sale_price`)
+- [x] T038 [US2] Implement `ProductListView` + `ProductView` serializer + pagination (default/cap 1000) + `urls.py`
+- [x] T039 [US2] Wire US2 (`ListProducts`) into catalog composition
+- [x] T040 [P] [US2] Implement `frontend/src/types.ts` + `frontend/src/api/products.ts`
+- [x] T041 [US2] Implement `useFilters` (URL-synced filter+`Ordering`) and `useProducts` (debounced refetch) in `frontend/src/hooks/`
+- [x] T042 [P] [US2] Implement `frontend/src/components/Filters/{PriceRangeSlider,RatingFilter,ReviewsFilter}.tsx`
+- [x] T043 [US2] Implement `frontend/src/components/ProductTable.tsx` (TanStack manual/controlled sorting → `ordering=` param; render as received)
+- [x] T044 [US2] Implement `frontend/src/components/QueryBar.tsx` + wire filters/table in `frontend/src/App.tsx`
 
 **Checkpoint**: live, filterable, sortable table (MVP with US1).
 
