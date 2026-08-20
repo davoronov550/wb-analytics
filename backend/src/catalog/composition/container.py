@@ -35,6 +35,7 @@ def build_wb_gateway() -> WbCatalogGatewayPort:
     return HttpxWbCatalogGateway(
         dest=settings.WB_DEST,
         timeout=settings.WB_REQUEST_TIMEOUT,
+        proxies=settings.WB_PROXIES or None,
     )
 
 

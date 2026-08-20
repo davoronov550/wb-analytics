@@ -128,9 +128,9 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: simulated 429/timeout → backoff+retry then success or clean `UpstreamUnavailable`.
 
-- [ ] T051 [P] [US6] FAILING resilience test `backend/tests/adapters/test_wb_gateway_resilience.py` (respx 429/timeout sequences; UA rotation; exhaustion→`UpstreamUnavailable`)
-- [ ] T052 [US6] Add timeouts + bounded retries with exponential backoff+jitter to `wildberries/gateway.py`
-- [ ] T053 [US6] Add User-Agent rotation + optional proxy rotation (`WB_PROXIES`); map exhaustion → `UpstreamUnavailable` (no partial writes)
+- [x] T051 [P] [US6] FAILING resilience test `backend/tests/adapters/test_wb_gateway_resilience.py` (respx 429/timeout sequences; UA rotation; exhaustion→`UpstreamUnavailable`)
+- [x] T052 [US6] Add timeouts + bounded retries with exponential backoff+jitter to `wildberries/gateway.py`
+- [x] T053 [US6] Add User-Agent rotation + optional proxy rotation (`WB_PROXIES`); map exhaustion → `UpstreamUnavailable` (no partial writes)
 
 ---
 
