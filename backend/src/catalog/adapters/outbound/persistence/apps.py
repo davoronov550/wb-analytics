@@ -14,3 +14,8 @@ class CatalogPersistenceConfig(AppConfig):
     name = "catalog.adapters.outbound.persistence"
     label = "catalog"
     verbose_name = "Catalog"
+
+    def ready(self) -> None:
+        # Import the Celery tasks module so its @shared_task registers at startup
+        # (needed for eager/worker dispatch by name).
+        from catalog.adapters.outbound import tasks  # noqa: F401

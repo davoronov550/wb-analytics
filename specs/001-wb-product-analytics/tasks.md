@@ -138,12 +138,12 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: `POST /api/parse/` → 202 + `task_id`; `GET /api/tasks/{id}/` reaches `done`; duplicate concurrent query → same task.
 
-- [ ] T054 [P] [US5] FAILING test `backend/tests/adapters/test_task_queue.py` (Celery eager task runs `CollectProducts`; in-flight idempotency lock)
-- [ ] T055 [P] [US5] FAILING e2e `backend/tests/e2e/test_parse_async.py` (`POST /api/parse/`→202; `GET /api/tasks/{id}/` status/counters; 400)
-- [ ] T056 [US5] Implement `CeleryTaskQueue` (`TaskQueuePort`) in `backend/src/shared/adapters/` + Celery task registration
-- [ ] T057 [US5] Implement catalog Celery task → `CollectProducts`; `ParseJobModel` (status/counters) + migration; per-query in-flight idempotency
-- [ ] T058 [US5] Implement `ParseView` (202+`task_id`) + `TaskStatusView` + `urls.py` in catalog http adapter
-- [ ] T059 [US5] Wire US5 in composition; frontend `useTaskStatus` hook + `QueryBar` progress + `api/parse.ts`,`api/tasks.ts`
+- [x] T054 [P] [US5] FAILING test `backend/tests/adapters/test_task_queue.py` (Celery eager task runs `CollectProducts`; in-flight idempotency lock)
+- [x] T055 [P] [US5] FAILING e2e `backend/tests/e2e/test_parse_async.py` (`POST /api/parse/`→202; `GET /api/tasks/{id}/` status/counters; 400)
+- [x] T056 [US5] Implement `CeleryTaskQueue` (`TaskQueuePort`) in `backend/src/shared/adapters/` + Celery task registration
+- [x] T057 [US5] Implement catalog Celery task → `CollectProducts`; `ParseJobModel` (status/counters) + migration; per-query in-flight idempotency
+- [x] T058 [US5] Implement `ParseView` (202+`task_id`) + `TaskStatusView` + `urls.py` in catalog http adapter
+- [x] T059 [US5] Wire US5 in composition; frontend `useTaskStatus` hook + `QueryBar` progress + `api/parse.ts`,`api/tasks.ts`
 
 ---
 

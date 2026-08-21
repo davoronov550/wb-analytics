@@ -26,11 +26,3 @@ export async function fetchProducts(
   }
   return response.json();
 }
-
-export async function triggerParse(query: string): Promise<Response> {
-  return fetch(`${API_BASE}/api/parse/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query }),
-  });
-}

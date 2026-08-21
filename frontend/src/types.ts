@@ -32,3 +32,22 @@ export interface ProductsResponse {
   previous: string | null;
   results: Product[];
 }
+
+export type ParseState = "pending" | "running" | "done" | "failed";
+
+export interface ParseAccepted {
+  task_id: string;
+  query: string;
+  status: string;
+}
+
+export interface TaskStatus {
+  task_id: string;
+  query: string;
+  status: ParseState;
+  created: number;
+  updated: number;
+  collected_count: number;
+  error: string | null;
+  finished_at: string | null;
+}

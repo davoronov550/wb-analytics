@@ -53,3 +53,23 @@ class ProductModel(models.Model):
 
     def __str__(self) -> str:
         return f"{self.wb_id} {self.name}"
+
+
+class ParseJobModel(models.Model):
+    """Status of an asynchronous collection run (FE-02)."""
+
+    task_id = models.CharField(primary_key=True, max_length=64)
+    query = models.CharField(max_length=200, db_index=True)
+    status = models.CharField(max_length=16, default="pending", db_index=True)
+    created = models.PositiveIntegerField(default=0)
+    updated = models.PositiveIntegerField(default=0)
+    error = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        db_table = "catalog_parse_job"
+        indexes = [models.Index(fields=["query", "status"])]
+
+    def __str__(self) -> str:
+        return f"{self.task_id} {self.query} [{self.status}]"

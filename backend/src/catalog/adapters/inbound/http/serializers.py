@@ -20,3 +20,14 @@ class ProductViewSerializer(serializers.Serializer):
     reviews_count = serializers.IntegerField()
     query = serializers.CharField(allow_null=True)
     updated_at = serializers.DateTimeField(allow_null=True)
+
+
+class ParseJobSerializer(serializers.Serializer):
+    task_id = serializers.CharField()
+    query = serializers.CharField()
+    status = serializers.CharField()
+    created = serializers.IntegerField()
+    updated = serializers.IntegerField()
+    collected_count = serializers.IntegerField()
+    error = serializers.CharField(allow_null=True)
+    finished_at = serializers.DateTimeField(allow_null=True)

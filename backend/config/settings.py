@@ -100,6 +100,9 @@ def _database_from_env() -> dict:
 
 
 DATABASES = {"default": _database_from_env()}
+# Fail fast when the DB is unreachable (keeps `check`/`makemigrations` snappy
+# before PostgreSQL is up); real usage overrides via DATABASE_URL/pool settings.
+DATABASES["default"].setdefault("OPTIONS", {})["connect_timeout"] = 2
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

@@ -12,8 +12,11 @@ interface ProductsState {
   error: string | null;
 }
 
-/** Fetches products for the given filters+sort, debounced, cancelling stale requests. */
-export function useProducts(filters: Filters, sort: Sort): ProductsState {
+/**
+ * Fetches products for the given filters+sort, debounced, cancelling stale
+ * requests. `reloadToken` forces a refetch (e.g. after a collection run finishes).
+ */
+export function useProducts(filters: Filters, sort: Sort, reloadToken?: number): ProductsState {
   const [state, setState] = useState<ProductsState>({
     products: [],
     count: 0,
@@ -21,7 +24,7 @@ export function useProducts(filters: Filters, sort: Sort): ProductsState {
     error: null,
   });
 
-  const key = JSON.stringify([filters, sort]);
+  const key = JSON.stringify([filters, sort, reloadToken]);
 
   useEffect(() => {
     const controller = new AbortController();

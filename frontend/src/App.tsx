@@ -5,6 +5,8 @@ import { RatingFilter } from "./components/Filters/RatingFilter";
 import { ReviewsFilter } from "./components/Filters/ReviewsFilter";
 import { ProductTable } from "./components/ProductTable";
 import { QueryBar } from "./components/QueryBar";
+import { useState } from "react";
+
 import { useFilters } from "./hooks/useFilters";
 import { useProducts } from "./hooks/useProducts";
 import type { Filters } from "./types";
@@ -14,7 +16,8 @@ const PRICE_MAX = 100000;
 
 export default function App() {
   const { filters, sort, setFilters, setSort } = useFilters();
-  const { products, count, loading, error } = useProducts(filters, sort);
+  const [reloadKey, setReloadKey] = useState(0);
+  const { products, count, loading, error } = useProducts(filters, sort, reloadKey);
 
   const update = (patch: Partial<Filters>) => setFilters({ ...filters, ...patch });
   const priceValue: [number, number] = [filters.minPrice ?? PRICE_MIN, filters.maxPrice ?? PRICE_MAX];
@@ -22,7 +25,7 @@ export default function App() {
   return (
     <main className="app">
       <h1>WB Analytics</h1>
-      <QueryBar />
+      <QueryBar onParsed={() => setReloadKey((k) => k + 1)} />
       <section className="filters">
         <PriceRangeSlider
           min={PRICE_MIN}
