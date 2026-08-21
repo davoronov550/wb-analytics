@@ -151,11 +151,11 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: schedule with short interval → auto ParseRun on tick; disable stops it.
 
-- [ ] T060 [P] [US4] FAILING tests `backend/tests/application/test_scheduling.py` (`manage_schedule`; `run_due_schedules` enqueues via fake `TaskQueuePort`; disabled skipped)
-- [ ] T061 [US4] Implement scheduling `domain/schedule.py`, `application/ports.py` (`ScheduleRepositoryPort`), use cases `manage_schedule`, `run_due_schedules`
-- [ ] T062 [US4] Implement `ScheduleModel` + repository + migration in scheduling persistence adapter
-- [ ] T063 [US4] Implement Celery Beat inbound adapter → `run_due_schedules`; `ScheduleView` (CRUD + enable/disable) + `urls.py`
-- [ ] T064 [US4] Wire scheduling composition; frontend `components/schedules/ScheduleManager.tsx` + `api/schedules.ts`
+- [x] T060 [P] [US4] FAILING tests `backend/tests/application/test_scheduling.py` (`manage_schedule`; `run_due_schedules` enqueues via fake `TaskQueuePort`; disabled skipped)
+- [x] T061 [US4] Implement scheduling `domain/schedule.py`, `application/ports.py` (`ScheduleRepositoryPort`), use cases `manage_schedule`, `run_due_schedules`
+- [x] T062 [US4] Implement `ScheduleModel` + repository + migration in scheduling persistence adapter
+- [x] T063 [US4] Implement Celery Beat inbound adapter → `run_due_schedules`; `ScheduleView` (CRUD + enable/disable) + `urls.py`
+- [x] T064 [US4] Wire scheduling composition; frontend `components/schedules/ScheduleManager.tsx` + `api/schedules.ts`
 
 ---
 

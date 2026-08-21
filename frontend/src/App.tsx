@@ -5,6 +5,7 @@ import { RatingFilter } from "./components/Filters/RatingFilter";
 import { ReviewsFilter } from "./components/Filters/ReviewsFilter";
 import { ProductTable } from "./components/ProductTable";
 import { QueryBar } from "./components/QueryBar";
+import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { useState } from "react";
 
 import { useFilters } from "./hooks/useFilters";
@@ -45,6 +46,7 @@ export default function App() {
         <DiscountVsRatingChart products={products} />
       </section>
       <ProductTable products={products} sort={sort} onSortChange={setSort} />
+      <ScheduleManager />
     </main>
   );
 }

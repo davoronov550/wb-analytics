@@ -51,3 +51,12 @@ export interface TaskStatus {
   error: string | null;
   finished_at: string | null;
 }
+
+export interface Schedule {
+  id: number;
+  query: string;
+  spec: string;
+  interval_seconds: number;
+  active: boolean;
+  last_run_at: string | null;
+}
