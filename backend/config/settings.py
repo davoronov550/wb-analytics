@@ -9,6 +9,7 @@ tasks land (see the task references below), so the project boots at every step.
 
 import os
 import sys
+from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -38,7 +39,7 @@ INSTALLED_APPS = [
     "analytics.adapters.outbound.persistence.apps.AnalyticsPersistenceConfig",  # T067
     "scheduling.adapters.outbound.persistence.apps.SchedulingPersistenceConfig",  # T062
     # "notifications.adapters.outbound.persistence.apps.NotificationsPersistenceConfig", # T084
-    # "accounts.adapters.outbound.persistence.apps.AccountsPersistenceConfig",           # T075
+    "accounts.adapters.outbound.persistence.apps.AccountsPersistenceConfig",  # T075
 ]
 
 MIDDLEWARE = [
@@ -158,6 +159,13 @@ EVENT_PUBLISHER = os.environ.get("EVENT_PUBLISHER", "inprocess")
 
 # --- Price-history retention (FE-04; T066) ---
 SNAPSHOT_RETENTION_DAYS = int(os.environ.get("SNAPSHOT_RETENTION_DAYS", "90"))
+
+# --- Auth / JWT (FE-09) ---
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY") or SECRET_KEY,
+}
 
 # --- Structured logging (Constitution VIII) ---
 LOGGING = {

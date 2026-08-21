@@ -61,6 +61,18 @@ export interface Schedule {
   last_run_at: string | null;
 }
 
+export interface User {
+  id: number;
+  username: string;
+}
+
+export interface SavedSearch {
+  id: number;
+  name: string;
+  query: string;
+  filters: Record<string, unknown>;
+}
+
 export interface PriceSnapshot {
   captured_at: string;
   price: string;

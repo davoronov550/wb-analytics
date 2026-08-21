@@ -1,4 +1,5 @@
 import type { Schedule } from "../types";
+import { authHeaders } from "./token";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 const BASE = `${API_BASE}/api/schedules/`;
@@ -9,14 +10,14 @@ async function json<T>(response: Response): Promise<T> {
 }
 
 export async function listSchedules(): Promise<Schedule[]> {
-  return json(await fetch(BASE));
+  return json(await fetch(BASE, { headers: authHeaders() }));
 }
 
 export async function createSchedule(query: string, spec: string): Promise<Schedule> {
   return json(
     await fetch(BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ query, spec }),
     }),
   );
@@ -26,13 +27,13 @@ export async function setScheduleActive(id: number, active: boolean): Promise<Sc
   return json(
     await fetch(`${BASE}${id}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ active }),
     }),
   );
 }
 
 export async function deleteSchedule(id: number): Promise<void> {
-  const response = await fetch(`${BASE}${id}/`, { method: "DELETE" });
+  const response = await fetch(`${BASE}${id}/`, { method: "DELETE", headers: authHeaders() });
   if (!response.ok) throw new Error(`Delete schedule failed: ${response.status}`);
 }

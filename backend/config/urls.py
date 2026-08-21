@@ -15,6 +15,6 @@ urlpatterns = [
     path("api/", include("analytics.adapters.inbound.http.urls")),  # T068/T073/T090
     path("api/", include("scheduling.adapters.inbound.http.urls")),  # T063
     # path("api/", include("notifications.adapters.inbound.http.urls")),  # T086
-    # path("api/", include("accounts.adapters.inbound.http.urls")),  # T076
+    path("api/", include("accounts.adapters.inbound.http.urls")),  # T076
     # path("api/health/", health_view),  # T095
 ]

@@ -5,11 +5,14 @@ import { StatsPanel } from "./components/charts/StatsPanel";
 import { PriceRangeSlider } from "./components/Filters/PriceRangeSlider";
 import { RatingFilter } from "./components/Filters/RatingFilter";
 import { ReviewsFilter } from "./components/Filters/ReviewsFilter";
+import { LoginForm } from "./components/auth/LoginForm";
+import { SavedSearches } from "./components/auth/SavedSearches";
 import { ProductTable } from "./components/ProductTable";
 import { QueryBar } from "./components/QueryBar";
 import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { useState } from "react";
 
+import { useAuth } from "./hooks/useAuth";
 import { useFilters } from "./hooks/useFilters";
 import { useProducts } from "./hooks/useProducts";
 import type { Filters } from "./types";
@@ -19,6 +22,7 @@ const PRICE_MAX = 100000;
 
 export default function App() {
   const { filters, sort, setFilters, setSort } = useFilters();
+  const { user, login, register, logout } = useAuth();
   const [reloadKey, setReloadKey] = useState(0);
   const [selectedWbId, setSelectedWbId] = useState<number | null>(null);
   const { products, count, loading, error } = useProducts(filters, sort, reloadKey);
@@ -28,7 +32,19 @@ export default function App() {
 
   return (
     <main className="app">
-      <h1>WB Analytics</h1>
+      <header className="app__header">
+        <h1>WB Analytics</h1>
+        {user ? (
+          <div className="app__user">
+            <span>{user.username}</span>
+            <button type="button" onClick={logout}>
+              Выйти
+            </button>
+          </div>
+        ) : (
+          <LoginForm onLogin={login} onRegister={register} />
+        )}
+      </header>
       <QueryBar onParsed={() => setReloadKey((k) => k + 1)} />
       <section className="filters">
         <PriceRangeSlider
@@ -56,7 +72,14 @@ export default function App() {
         onSelect={setSelectedWbId}
       />
       {selectedWbId != null ? <PriceHistoryChart wbId={selectedWbId} /> : null}
-      <ScheduleManager />
+      {user ? (
+        <>
+          <SavedSearches filters={filters} onApply={(saved) => setFilters(saved.filters as Filters)} />
+          <ScheduleManager />
+        </>
+      ) : (
+        <p className="app__auth-hint">Войдите, чтобы сохранять запросы и настраивать расписания.</p>
+      )}
     </main>
   );
 }

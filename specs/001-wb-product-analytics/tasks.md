@@ -186,11 +186,11 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: two users isolated; foreign resource access → 403/404.
 
-- [ ] T074 [P] [US12] FAILING tests `backend/tests/e2e/test_auth_isolation.py` (register/login; two-user saved-search/schedule/alert isolation)
-- [ ] T075 [US12] Implement accounts persistence (`User` via Django auth, `SavedSearchModel`) + repos + `application/ports.py`
-- [ ] T076 [US12] Implement auth endpoints (register/login/logout, session + JWT) + `SavedSearchView` (owner-scoped) + `urls.py`
-- [ ] T077 [US12] Add `owner` + ownership permissions to `ScheduleModel`/`AlertRuleModel` and their views (enforce 403/404)
-- [ ] T078 [US12] Wire accounts composition; frontend `components/auth/{LoginForm,SavedSearches}.tsx` + `hooks/useAuth.ts` + `api/auth.ts`
+- [x] T074 [P] [US12] FAILING tests `backend/tests/e2e/test_auth_isolation.py` (register/login; two-user saved-search/schedule/alert isolation)
+- [x] T075 [US12] Implement accounts persistence (`User` via Django auth, `SavedSearchModel`) + repos + `application/ports.py`
+- [x] T076 [US12] Implement auth endpoints (register/login/logout, session + JWT) + `SavedSearchView` (owner-scoped) + `urls.py`
+- [x] T077 [US12] Add `owner` + ownership permissions to `ScheduleModel`/`AlertRuleModel` and their views (enforce 403/404)
+- [x] T078 [US12] Wire accounts composition; frontend `components/auth/{LoginForm,SavedSearches}.tsx` + `hooks/useAuth.ts` + `api/auth.ts`
 
 ---
 
