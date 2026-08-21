@@ -175,10 +175,10 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: `GET /api/stats/?query=...` returns correct avg/median/discount share, consistent with data.
 
-- [ ] T070 [P] [US8] FAILING tests `backend/tests/adapters/test_stats.py` + e2e `test_stats_api.py` (aggregation correctness; same filters as products)
-- [ ] T071 [US8] Implement `compute_stats` use case + `StatsQueryPort` in analytics application
-- [ ] T072 [US8] Implement DB aggregation adapter (avg/median/stddev/discount share/top-by-reviews) reusing `ProductFilter`
-- [ ] T073 [US8] Implement `StatsView` (same filters) + `urls.py` + wire; frontend `components/charts/StatsPanel.tsx` + `api/stats.ts`
+- [x] T070 [P] [US8] FAILING tests `backend/tests/adapters/test_stats.py` + e2e `test_stats_api.py` (aggregation correctness; same filters as products)
+- [x] T071 [US8] Implement `compute_stats` use case + `StatsQueryPort` in analytics application
+- [x] T072 [US8] Implement DB aggregation adapter (avg/median/stddev/discount share/top-by-reviews) reusing `ProductFilter`
+- [x] T073 [US8] Implement `StatsView` (same filters) + `urls.py` + wire; frontend `components/charts/StatsPanel.tsx` + `api/stats.ts`
 
 ---
 

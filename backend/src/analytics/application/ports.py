@@ -5,10 +5,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Protocol
 
-from analytics.application.dto import SnapshotInput
+from analytics.application.dto import SnapshotInput, Stats
 from analytics.domain.snapshot import Snapshot
+from catalog.application.dto import ProductFilter
 
-__all__ = ["SnapshotRepositoryPort", "ProductReaderPort"]
+__all__ = ["SnapshotRepositoryPort", "ProductReaderPort", "StatsQueryPort"]
 
 
 class SnapshotRepositoryPort(Protocol):
@@ -31,3 +32,13 @@ class ProductReaderPort(Protocol):
     """Read current product figures from the catalog (cross-context seam)."""
 
     def snapshot_inputs(self, wb_ids: list[int]) -> list[SnapshotInput]: ...
+
+
+class StatsQueryPort(Protocol):
+    """Aggregate catalog products (DB-side) for a filtered set (FE-05).
+
+    Reuses catalog's ProductFilter so /api/stats/ shares the exact filter semantics
+    of /api/products/.
+    """
+
+    def aggregate(self, filter: ProductFilter) -> Stats: ...

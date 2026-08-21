@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from analytics.adapters.outbound.catalog_reader import CatalogProductReader
 from analytics.adapters.outbound.persistence.repository import DjangoSnapshotRepository
-from analytics.application.ports import ProductReaderPort, SnapshotRepositoryPort
+from analytics.adapters.outbound.stats_query import DjangoStatsQuery
+from analytics.application.ports import ProductReaderPort, SnapshotRepositoryPort, StatsQueryPort
+from analytics.application.use_cases.compute_stats import ComputeStats
 from analytics.application.use_cases.history import ApplyRetention, ListHistory
 from analytics.application.use_cases.record_snapshots import RecordSnapshots
 from shared.composition import get_clock, get_event_bus
@@ -35,6 +37,14 @@ def build_list_history() -> ListHistory:
 
 def build_apply_retention() -> ApplyRetention:
     return ApplyRetention(repository=build_snapshot_repository(), clock=get_clock())
+
+
+def build_stats_query() -> StatsQueryPort:
+    return DjangoStatsQuery()
+
+
+def build_compute_stats() -> ComputeStats:
+    return ComputeStats(stats_query=build_stats_query())
 
 
 def _on_products_collected(event: ProductsCollected) -> None:

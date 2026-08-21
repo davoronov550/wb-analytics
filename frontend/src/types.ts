@@ -72,3 +72,19 @@ export interface PriceHistory {
   wb_id: number;
   points: PriceSnapshot[];
 }
+
+export interface TopProduct {
+  wb_id: number;
+  name: string;
+  reviews_count: number;
+}
+
+export interface Stats {
+  count: number;
+  avg_price: string;
+  median_price: string;
+  price_stddev: string;
+  avg_discount_abs: string;
+  discount_share: number;
+  top_by_reviews: TopProduct[];
+}
