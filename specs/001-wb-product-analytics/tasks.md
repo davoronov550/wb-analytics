@@ -198,9 +198,9 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: compare two collected queries → side-by-side metrics.
 
-- [ ] T079 [P] [US9] FAILING test `backend/tests/application/test_compare.py` + e2e (`GET /api/stats/?query=a&query=b`)
-- [ ] T080 [US9] Implement `compare_queries` use case (reuse `StatsQueryPort`) + `CompareView` + `urls.py`
-- [ ] T081 [US9] Frontend `components/compare/CompareView.tsx` + `api/compare.ts`
+- [x] T079 [P] [US9] FAILING test `backend/tests/application/test_compare.py` + e2e (`GET /api/stats/?query=a&query=b`)
+- [x] T080 [US9] Implement `compare_queries` use case (reuse `StatsQueryPort`) + `CompareView` + `urls.py`
+- [x] T081 [US9] Frontend `components/compare/CompareView.tsx` + `api/compare.ts`
 
 ---
 

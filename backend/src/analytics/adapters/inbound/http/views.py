@@ -20,9 +20,25 @@ class HistoryView(APIView):
 
 
 class StatsView(APIView):
-    """GET /api/stats/ — aggregates for a filtered set (same filters as products)."""
+    """GET /api/stats/ — aggregates for a filtered set; repeated `query=` compares.
+
+    One query → a single Stats object. Two or more `query=` params → comparison
+    (FE-06): `{"items": [{"query", "stats"}, ...]}`, one per query, all sharing the
+    other filters.
+    """
 
     def get(self, request: Request) -> Response:
         product_filter = parse_product_filter(request.query_params)  # InvalidFilter → 400
+        queries = request.query_params.getlist("query")
+        if len(queries) > 1:
+            items = container.build_compare_queries().execute(queries, product_filter)
+            return Response(
+                {
+                    "items": [
+                        {"query": item.query, "stats": StatsSerializer(item.stats).data}
+                        for item in items
+                    ]
+                }
+            )
         stats = container.build_compute_stats().execute(product_filter)
         return Response(StatsSerializer(stats).data)

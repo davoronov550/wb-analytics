@@ -34,3 +34,11 @@ class Stats:
     avg_discount_abs: Decimal
     discount_share: float
     top_by_reviews: list[TopProduct]
+
+
+@dataclass(frozen=True)
+class QueryStats:
+    """Stats for one query, used in side-by-side comparison (FE-06)."""
+
+    query: str
+    stats: Stats

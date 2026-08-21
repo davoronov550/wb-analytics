@@ -50,3 +50,16 @@ def test_stats_aggregates_over_filtered_set():
     assert data["median_price"] == "100.00"
     assert data["discount_share"] == pytest.approx(0.6667, abs=1e-3)
     assert data["top_by_reviews"][0]["wb_id"] == 2  # 500 reviews
+
+
+@pytest.mark.django_db
+def test_stats_comparison_with_repeated_query_param():
+    DjangoProductRepository().upsert_many([_p(1, "100", "80", "4.5", 10, "A")], "наушники")
+    DjangoProductRepository().upsert_many([_p(2, "200", "150", "4.0", 20, "B")], "чайники")
+
+    resp = APIClient().get("/api/stats/?query=наушники&query=чайники")
+    assert resp.status_code == 200
+    items = resp.data["items"]
+    assert [i["query"] for i in items] == ["наушники", "чайники"]
+    assert items[0]["stats"]["count"] == 1
+    assert items[1]["stats"]["count"] == 1

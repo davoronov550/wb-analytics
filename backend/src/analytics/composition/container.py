@@ -6,6 +6,7 @@ from analytics.adapters.outbound.catalog_reader import CatalogProductReader
 from analytics.adapters.outbound.persistence.repository import DjangoSnapshotRepository
 from analytics.adapters.outbound.stats_query import DjangoStatsQuery
 from analytics.application.ports import ProductReaderPort, SnapshotRepositoryPort, StatsQueryPort
+from analytics.application.use_cases.compare_queries import CompareQueries
 from analytics.application.use_cases.compute_stats import ComputeStats
 from analytics.application.use_cases.history import ApplyRetention, ListHistory
 from analytics.application.use_cases.record_snapshots import RecordSnapshots
@@ -45,6 +46,10 @@ def build_stats_query() -> StatsQueryPort:
 
 def build_compute_stats() -> ComputeStats:
     return ComputeStats(stats_query=build_stats_query())
+
+
+def build_compare_queries() -> CompareQueries:
+    return CompareQueries(stats_query=build_stats_query())
 
 
 def _on_products_collected(event: ProductsCollected) -> None:

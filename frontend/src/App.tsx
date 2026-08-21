@@ -2,6 +2,7 @@ import { DiscountVsRatingChart } from "./components/charts/DiscountVsRatingChart
 import { PriceHistogram } from "./components/charts/PriceHistogram";
 import { PriceHistoryChart } from "./components/charts/PriceHistoryChart";
 import { StatsPanel } from "./components/charts/StatsPanel";
+import { CompareView } from "./components/compare/CompareView";
 import { PriceRangeSlider } from "./components/Filters/PriceRangeSlider";
 import { RatingFilter } from "./components/Filters/RatingFilter";
 import { ReviewsFilter } from "./components/Filters/ReviewsFilter";
@@ -61,6 +62,7 @@ export default function App() {
         {error ? ` · ${error}` : ""}
       </p>
       <StatsPanel filters={filters} />
+      <CompareView />
       <section className="charts">
         <PriceHistogram products={products} />
         <DiscountVsRatingChart products={products} />
