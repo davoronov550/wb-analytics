@@ -163,11 +163,11 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: two collections with different prices → history has 2 points via `GET /api/products/{wb_id}/history/`.
 
-- [ ] T065 [P] [US7] FAILING tests `backend/tests/application/test_history.py` (subscriber records snapshot on `ProductsCollected`; `list_history`; `apply_retention`)
-- [ ] T066 [US7] Implement analytics `domain/snapshot.py` + `application/ports.py` (`SnapshotRepositoryPort`) + use cases `record_snapshot`, `list_history`, `apply_retention`
-- [ ] T067 [US7] Implement `SnapshotModel` + repository + migration (index `(wb_id, captured_at)`)
-- [ ] T068 [US7] Implement event subscriber (on `ProductsCollected` → record snapshots; emit `PriceChanged` on delta) + `HistoryView` + `urls.py`
-- [ ] T069 [US7] Wire analytics composition; frontend `components/charts/PriceHistoryChart.tsx` + `api/history.ts`
+- [x] T065 [P] [US7] FAILING tests `backend/tests/application/test_history.py` (subscriber records snapshot on `ProductsCollected`; `list_history`; `apply_retention`)
+- [x] T066 [US7] Implement analytics `domain/snapshot.py` + `application/ports.py` (`SnapshotRepositoryPort`) + use cases `record_snapshot`, `list_history`, `apply_retention`
+- [x] T067 [US7] Implement `SnapshotModel` + repository + migration (index `(wb_id, captured_at)`)
+- [x] T068 [US7] Implement event subscriber (on `ProductsCollected` → record snapshots; emit `PriceChanged` on delta) + `HistoryView` + `urls.py`
+- [x] T069 [US7] Wire analytics composition; frontend `components/charts/PriceHistoryChart.tsx` + `api/history.ts`
 
 ---
 

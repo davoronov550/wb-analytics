@@ -6,6 +6,7 @@ interface Props {
   products: Product[];
   sort: Sort;
   onSortChange: (sort: Sort) => void;
+  onSelect?: (wbId: number) => void;
 }
 
 interface ColumnSpec {
@@ -22,7 +23,7 @@ const COLUMNS: ColumnSpec[] = [
   { field: "reviews_count", header: "Отзывы", value: (p) => p.reviews_count },
 ];
 
-export function ProductTable({ products, sort, onSortChange }: Props) {
+export function ProductTable({ products, sort, onSortChange, onSelect }: Props) {
   // Sorting is server-side: a header click emits the desired Ordering; the table
   // renders rows exactly as received (no local re-sort).
   const columns: ColumnDef<Product>[] = COLUMNS.map((spec) => ({
@@ -67,7 +68,11 @@ export function ProductTable({ products, sort, onSortChange }: Props) {
           </tr>
         ) : (
           table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
+            <tr
+              key={row.id}
+              className={onSelect ? "product-table__row--clickable" : undefined}
+              onClick={onSelect ? () => onSelect(row.original.wb_id) : undefined}
+            >
               {row.getVisibleCells().map((cell) => (
                 <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
               ))}

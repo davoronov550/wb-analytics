@@ -60,3 +60,15 @@ export interface Schedule {
   active: boolean;
   last_run_at: string | null;
 }
+
+export interface PriceSnapshot {
+  captured_at: string;
+  price: string;
+  sale_price: string;
+  rating: string;
+}
+
+export interface PriceHistory {
+  wb_id: number;
+  points: PriceSnapshot[];
+}

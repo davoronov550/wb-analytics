@@ -1,5 +1,6 @@
 import { DiscountVsRatingChart } from "./components/charts/DiscountVsRatingChart";
 import { PriceHistogram } from "./components/charts/PriceHistogram";
+import { PriceHistoryChart } from "./components/charts/PriceHistoryChart";
 import { PriceRangeSlider } from "./components/Filters/PriceRangeSlider";
 import { RatingFilter } from "./components/Filters/RatingFilter";
 import { ReviewsFilter } from "./components/Filters/ReviewsFilter";
@@ -18,6 +19,7 @@ const PRICE_MAX = 100000;
 export default function App() {
   const { filters, sort, setFilters, setSort } = useFilters();
   const [reloadKey, setReloadKey] = useState(0);
+  const [selectedWbId, setSelectedWbId] = useState<number | null>(null);
   const { products, count, loading, error } = useProducts(filters, sort, reloadKey);
 
   const update = (patch: Partial<Filters>) => setFilters({ ...filters, ...patch });
@@ -45,7 +47,13 @@ export default function App() {
         <PriceHistogram products={products} />
         <DiscountVsRatingChart products={products} />
       </section>
-      <ProductTable products={products} sort={sort} onSortChange={setSort} />
+      <ProductTable
+        products={products}
+        sort={sort}
+        onSortChange={setSort}
+        onSelect={setSelectedWbId}
+      />
+      {selectedWbId != null ? <PriceHistoryChart wbId={selectedWbId} /> : null}
       <ScheduleManager />
     </main>
   );

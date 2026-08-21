@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     # --- bounded-context persistence apps: enable each as its model task lands ---
     "catalog.adapters.outbound.persistence.apps.CatalogPersistenceConfig",  # T015 (+ ParseJob T057)
     "catalog.adapters.inbound.cli.apps.CatalogCliConfig",  # T028 (management commands)
-    # "analytics.adapters.outbound.persistence.apps.AnalyticsPersistenceConfig",         # T067
+    "analytics.adapters.outbound.persistence.apps.AnalyticsPersistenceConfig",  # T067
     "scheduling.adapters.outbound.persistence.apps.SchedulingPersistenceConfig",  # T062
     # "notifications.adapters.outbound.persistence.apps.NotificationsPersistenceConfig", # T084
     # "accounts.adapters.outbound.persistence.apps.AccountsPersistenceConfig",           # T075
