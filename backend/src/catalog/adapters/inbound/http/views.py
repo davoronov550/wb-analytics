@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from catalog.adapters.inbound.http.request_filters import parse_ordering, parse_product_filter
@@ -49,6 +50,9 @@ class ProductListView(APIView):
 
 class ParseView(APIView):
     """POST /api/parse/ — enqueue an async collection run (FE-02), returns 202."""
+
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "parse"
 
     def post(self, request: Request) -> Response:
         data = request.data if isinstance(request.data, Mapping) else {}

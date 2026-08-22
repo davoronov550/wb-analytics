@@ -135,6 +135,11 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",  # catalog reads are public (FR-044)
     ],
     "EXCEPTION_HANDLER": "catalog.adapters.inbound.http.exceptions.exception_handler",  # T020
+    # Rate limits for abuse-prone endpoints (scoped throttles opt in per view; T094).
+    "DEFAULT_THROTTLE_RATES": {
+        "parse": os.environ.get("THROTTLE_PARSE", "30/min"),
+        "auth": os.environ.get("THROTTLE_AUTH", "10/min"),
+    },
 }
 
 # --- CORS (frontend dev origin) ---

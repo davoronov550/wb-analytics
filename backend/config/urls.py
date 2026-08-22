@@ -8,8 +8,11 @@ every step.
 from django.contrib import admin
 from django.urls import include, path
 
+from config.health import health_view
+
 urlpatterns = [
     path("admin/", admin.site.urls),
+    path("api/health/", health_view, name="health"),
     # --- context API routers: enable as each context's views land ---
     path("api/", include("catalog.adapters.inbound.http.urls")),  # T038/T058
     path("api/", include("analytics.adapters.inbound.http.urls")),  # T068/T073/T090

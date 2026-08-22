@@ -229,14 +229,14 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 ## Phase 15: Polish & Cross-Cutting Concerns
 
-- [ ] T091 [P] Verify coverage: backend `pytest --cov` ≥ 80% and frontend `vitest --coverage` ≥ 80%; fill gaps
-- [ ] T092 [P] Write `README.md` (setup: web + Celery worker + Beat + Redis + PG; context/seam architecture diagram; run/test commands)
-- [ ] T093 Run `quickstart.md` end-to-end (all stories) and fix drift
-- [ ] T094 [P] Security/hardening: CORS, secrets in env, DRF non-leakage, ownership enforcement, rate-limit `parse`/`auth` endpoints
-- [ ] T095 [P] Observability: structured logging + ParseRun/Task/AlertEvent records + `GET /api/health/` (DB/Redis/queue/beat)
-- [ ] T096 [P] Frontend empty/error/loading states across table, charts, history, stats, compare, schedules, alerts
-- [ ] T097 [P] Perf checks: SC-002 (<1s table+charts @1000) and SC-010 (`/api/stats/` <1s @100k); record in `README.md`
-- [ ] T098 Verify microservices seam: `EVENT_PUBLISHER=bus` + a stub message-bus adapter wired via composition roots without touching any `domain/`/`application/`; document in `README.md`
+- [x] T091 [P] Verify coverage: backend `pytest --cov` ≥ 80% and frontend `vitest --coverage` ≥ 80%; fill gaps
+- [x] T092 [P] Write `README.md` (setup: web + Celery worker + Beat + Redis + PG; context/seam architecture diagram; run/test commands)
+- [x] T093 Run `quickstart.md` end-to-end (all stories) and fix drift
+- [x] T094 [P] Security/hardening: CORS, secrets in env, DRF non-leakage, ownership enforcement, rate-limit `parse`/`auth` endpoints
+- [x] T095 [P] Observability: structured logging + ParseRun/Task/AlertEvent records + `GET /api/health/` (DB/Redis/queue/beat)
+- [x] T096 [P] Frontend empty/error/loading states across table, charts, history, stats, compare, schedules, alerts
+- [x] T097 [P] Perf checks: SC-002 (<1s table+charts @1000) and SC-010 (`/api/stats/` <1s @100k); record in `README.md`
+- [x] T098 Verify microservices seam: `EVENT_PUBLISHER=bus` + a stub message-bus adapter wired via composition roots without touching any `domain/`/`application/`; document in `README.md`
 
 ---
 
