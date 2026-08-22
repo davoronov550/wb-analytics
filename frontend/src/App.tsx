@@ -3,6 +3,7 @@ import { PriceHistogram } from "./components/charts/PriceHistogram";
 import { PriceHistoryChart } from "./components/charts/PriceHistoryChart";
 import { StatsPanel } from "./components/charts/StatsPanel";
 import { CompareView } from "./components/compare/CompareView";
+import { ExportButtons } from "./components/ExportButtons";
 import { PriceRangeSlider } from "./components/Filters/PriceRangeSlider";
 import { RatingFilter } from "./components/Filters/RatingFilter";
 import { ReviewsFilter } from "./components/Filters/ReviewsFilter";
@@ -68,6 +69,7 @@ export default function App() {
         <PriceHistogram products={products} />
         <DiscountVsRatingChart products={products} />
       </section>
+      <ExportButtons filters={filters} />
       <ProductTable
         products={products}
         sort={sort}

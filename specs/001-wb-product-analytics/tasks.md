@@ -221,9 +221,9 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: `GET /api/export/?format=csv&...` returns file whose rows match the filter.
 
-- [ ] T088 [P] [US11] FAILING tests `backend/tests/adapters/test_export.py` (CSV/XLSX rows match filter; streaming)
-- [ ] T089 [US11] Implement `export_products` use case + streaming CSV writer + XLSX writer (openpyxl) in analytics export adapter
-- [ ] T090 [US11] Implement `ExportView` (same filters + `format`) + `urls.py` + wire; frontend export button + `api/export.ts`
+- [x] T088 [P] [US11] FAILING tests `backend/tests/adapters/test_export.py` (CSV/XLSX rows match filter; streaming)
+- [x] T089 [US11] Implement `export_products` use case + streaming CSV writer + XLSX writer (openpyxl) in analytics export adapter
+- [x] T090 [US11] Implement `ExportView` (same filters + `format`) + `urls.py` + wire; frontend export button + `api/export.ts`
 
 ---
 

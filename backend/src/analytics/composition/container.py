@@ -8,6 +8,7 @@ from analytics.adapters.outbound.stats_query import DjangoStatsQuery
 from analytics.application.ports import ProductReaderPort, SnapshotRepositoryPort, StatsQueryPort
 from analytics.application.use_cases.compare_queries import CompareQueries
 from analytics.application.use_cases.compute_stats import ComputeStats
+from analytics.application.use_cases.export_products import ExportProducts
 from analytics.application.use_cases.history import ApplyRetention, ListHistory
 from analytics.application.use_cases.record_snapshots import RecordSnapshots
 from shared.composition import get_clock, get_event_bus
@@ -50,6 +51,12 @@ def build_compute_stats() -> ComputeStats:
 
 def build_compare_queries() -> CompareQueries:
     return CompareQueries(stats_query=build_stats_query())
+
+
+def build_export_products() -> ExportProducts:
+    from catalog.composition import container as catalog_container
+
+    return ExportProducts(list_products=catalog_container.build_list_products())
 
 
 def _on_products_collected(event: ProductsCollected) -> None:
