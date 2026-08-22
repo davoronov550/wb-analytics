@@ -208,12 +208,12 @@ Celery are confined to `.../adapters/`. Contexts integrate via `EventBusPort`.
 
 **Independent Test**: rule + collection crossing threshold → AlertEvent + notification (fake notifier); cooldown prevents duplicates.
 
-- [ ] T082 [P] [US10] FAILING tests `backend/tests/application/test_alerts.py` (evaluate rule; fake `NotifierPort`; dedup/cooldown)
-- [ ] T083 [US10] Implement notifications `domain/` (`AlertRule`, `AlertEvent`, evaluation policy) + `application/ports.py` (`AlertRepositoryPort`, `NotifierPort`) + use cases `manage_alert`, `evaluate_alerts`
-- [ ] T084 [US10] Implement `AlertRuleModel` + `AlertEventModel` + repository + migration
-- [ ] T085 [US10] Implement `EmailNotifier` + `TelegramNotifier` (`NotifierPort`) with retry/backoff
-- [ ] T086 [US10] Implement event subscriber (on `ProductsCollected`/`PriceChanged` → `evaluate_alerts`) + `AlertView` (CRUD) + `urls.py`
-- [ ] T087 [US10] Wire notifications composition; frontend `components/alerts/AlertManager.tsx` + `api/alerts.ts`
+- [x] T082 [P] [US10] FAILING tests `backend/tests/application/test_alerts.py` (evaluate rule; fake `NotifierPort`; dedup/cooldown)
+- [x] T083 [US10] Implement notifications `domain/` (`AlertRule`, `AlertEvent`, evaluation policy) + `application/ports.py` (`AlertRepositoryPort`, `NotifierPort`) + use cases `manage_alert`, `evaluate_alerts`
+- [x] T084 [US10] Implement `AlertRuleModel` + `AlertEventModel` + repository + migration
+- [x] T085 [US10] Implement `EmailNotifier` + `TelegramNotifier` (`NotifierPort`) with retry/backoff
+- [x] T086 [US10] Implement event subscriber (on `ProductsCollected`/`PriceChanged` → `evaluate_alerts`) + `AlertView` (CRUD) + `urls.py`
+- [x] T087 [US10] Wire notifications composition; frontend `components/alerts/AlertManager.tsx` + `api/alerts.ts`
 
 ---
 

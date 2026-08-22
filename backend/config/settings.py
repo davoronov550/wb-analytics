@@ -38,7 +38,7 @@ INSTALLED_APPS = [
     "catalog.adapters.inbound.cli.apps.CatalogCliConfig",  # T028 (management commands)
     "analytics.adapters.outbound.persistence.apps.AnalyticsPersistenceConfig",  # T067
     "scheduling.adapters.outbound.persistence.apps.SchedulingPersistenceConfig",  # T062
-    # "notifications.adapters.outbound.persistence.apps.NotificationsPersistenceConfig", # T084
+    "notifications.adapters.outbound.persistence.apps.NotificationsPersistenceConfig",  # T084
     "accounts.adapters.outbound.persistence.apps.AccountsPersistenceConfig",  # T075
 ]
 
@@ -159,6 +159,19 @@ EVENT_PUBLISHER = os.environ.get("EVENT_PUBLISHER", "inprocess")
 
 # --- Price-history retention (FE-04; T066) ---
 SNAPSHOT_RETENTION_DAYS = int(os.environ.get("SNAPSHOT_RETENTION_DAYS", "90"))
+
+# --- Notifications (FE-07; T085) ---
+EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.environ.get("SMTP_HOST", "")
+EMAIL_PORT = int(os.environ.get("SMTP_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("SMTP_USER", "")
+EMAIL_HOST_PASSWORD = os.environ.get("SMTP_PASSWORD", "")
+EMAIL_USE_TLS = os.environ.get("SMTP_USE_TLS", "true").lower() == "true"
+SMTP_FROM = os.environ.get("SMTP_FROM", "alerts@example.com")
+ALERT_EMAIL_TO = os.environ.get("ALERT_EMAIL_TO", "alerts@example.com")
+TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_DEFAULT_CHAT_ID = os.environ.get("TELEGRAM_DEFAULT_CHAT_ID", "")
+ALERT_COOLDOWN_SECONDS = int(os.environ.get("ALERT_COOLDOWN_SECONDS", "21600"))
 
 # --- Auth / JWT (FE-09) ---
 SIMPLE_JWT = {

@@ -10,6 +10,7 @@ import { LoginForm } from "./components/auth/LoginForm";
 import { SavedSearches } from "./components/auth/SavedSearches";
 import { ProductTable } from "./components/ProductTable";
 import { QueryBar } from "./components/QueryBar";
+import { AlertManager } from "./components/alerts/AlertManager";
 import { ScheduleManager } from "./components/schedules/ScheduleManager";
 import { useState } from "react";
 
@@ -78,6 +79,7 @@ export default function App() {
         <>
           <SavedSearches filters={filters} onApply={(saved) => setFilters(saved.filters as Filters)} />
           <ScheduleManager />
+      <AlertManager />
         </>
       ) : (
         <p className="app__auth-hint">Войдите, чтобы сохранять запросы и настраивать расписания.</p>
