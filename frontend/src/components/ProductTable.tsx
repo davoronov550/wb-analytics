@@ -1,15 +1,36 @@
-import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { useEffect, useState } from "react";
+import {
+  type ColumnDef,
+  type PaginationState,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 
 import type { OrderableField, Product, Sort } from "../types";
 import { wbProductUrl } from "../lib/wb";
 import { IconExternal } from "./ui/icons";
+import { PAGE_SIZE_OPTIONS, TablePagination } from "./TablePagination";
 import "./ProductTable.css";
+
+const PAGE_SIZE_KEY = "wb:page-size";
+const DEFAULT_PAGE_SIZE = 25;
+
+function initialPageSize(): number {
+  const stored = Number(localStorage.getItem(PAGE_SIZE_KEY));
+  return PAGE_SIZE_OPTIONS.includes(stored as (typeof PAGE_SIZE_OPTIONS)[number])
+    ? stored
+    : DEFAULT_PAGE_SIZE;
+}
 
 interface Props {
   products: Product[];
   sort: Sort;
   onSortChange: (sort: Sort) => void;
   onSelect?: (wbId: number) => void;
+  /** Total matching rows on the server (for the "first N of M" hint). */
+  totalCount?: number;
 }
 
 interface ColumnSpec {
@@ -45,9 +66,14 @@ function NameCell({ product }: { product: Product }) {
   );
 }
 
-export function ProductTable({ products, sort, onSortChange, onSelect }: Props) {
+export function ProductTable({ products, sort, onSortChange, onSelect, totalCount }: Props) {
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: initialPageSize(),
+  });
+
   // Sorting is server-side: a header click emits the desired Ordering; the table
-  // renders rows exactly as received (no local re-sort).
+  // renders rows exactly as received (no local re-sort). Pagination is client-side.
   const columns: ColumnDef<Product>[] = COLUMNS.map((spec) => ({
     id: spec.field,
     accessorFn: spec.value,
@@ -71,10 +97,29 @@ export function ProductTable({ products, sort, onSortChange, onSelect }: Props) 
       ),
   }));
 
-  const table = useReactTable({ data: products, columns, getCoreRowModel: getCoreRowModel() });
+  const table = useReactTable({
+    data: products,
+    columns,
+    state: { pagination },
+    onPaginationChange: setPagination,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  // Reset to the first page whenever the data set changes (filters, sort, or a
+  // fresh collection) so the user never lands on a now-empty page.
+  useEffect(() => {
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, [products]);
+
+  const persistPageSize = (size: number) => {
+    localStorage.setItem(PAGE_SIZE_KEY, String(size));
+    table.setPageSize(size);
+  };
 
   return (
-    <div className="product-table__scroll">
+    <div className="product-table__wrap">
+      <div className="product-table__scroll">
       <table className="product-table">
         <thead>
           {table.getHeaderGroups().map((group) => (
@@ -114,6 +159,21 @@ export function ProductTable({ products, sort, onSortChange, onSelect }: Props) 
           )}
         </tbody>
       </table>
+      </div>
+      {products.length > 0 ? (
+        <TablePagination
+          pageIndex={table.getState().pagination.pageIndex}
+          pageCount={table.getPageCount()}
+          pageSize={table.getState().pagination.pageSize}
+          loadedRows={products.length}
+          totalRows={totalCount}
+          onFirst={() => table.setPageIndex(0)}
+          onPrev={() => table.previousPage()}
+          onNext={() => table.nextPage()}
+          onLast={() => table.setPageIndex(table.getPageCount() - 1)}
+          onPageSize={persistPageSize}
+        />
+      ) : null}
     </div>
   );
 }

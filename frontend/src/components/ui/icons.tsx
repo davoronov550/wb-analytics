@@ -154,3 +154,17 @@ export const IconSort = (p: IconProps) => (
     <path d="M16 20V4M16 4l3 3M16 20l-3-3" />
   </Base>
 );
+
+export const IconChevronsLeft = (p: IconProps) => (
+  <Base {...p}>
+    <polyline points="11 6 5 12 11 18" />
+    <polyline points="18 6 12 12 18 18" />
+  </Base>
+);
+
+export const IconChevronsRight = (p: IconProps) => (
+  <Base {...p}>
+    <polyline points="13 6 19 12 13 18" />
+    <polyline points="6 6 12 12 6 18" />
+  </Base>
+);

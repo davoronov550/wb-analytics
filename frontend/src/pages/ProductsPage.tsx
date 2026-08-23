@@ -77,6 +77,7 @@ export function ProductsPage() {
                 sort={sort}
                 onSortChange={setSort}
                 onSelect={setSelectedWbId}
+                totalCount={count}
               />
             )}
           </Panel>

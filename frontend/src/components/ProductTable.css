@@ -1,6 +1,92 @@
+.product-table__wrap {
+  display: flex;
+  flex-direction: column;
+}
 .product-table__scroll {
   width: 100%;
   overflow-x: auto;
+}
+
+/* --- Pagination footer --- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+.pagination__size {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.pagination__size-label {
+  color: var(--color-text-muted);
+}
+.pagination__size-select {
+  padding: 0.3rem 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+.pagination__size-select:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px var(--color-accent-ring);
+}
+.pagination__range {
+  font-variant-numeric: tabular-nums;
+}
+.pagination__cap {
+  color: var(--color-text-faint);
+}
+.pagination__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.pagination__btn {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  transition: background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+.pagination__btn:hover:not(:disabled) {
+  background: var(--color-surface-2);
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.pagination__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pagination__btn svg {
+  width: 16px;
+  height: 16px;
+}
+.pagination__chevron-left {
+  transform: rotate(180deg);
+}
+.pagination__page {
+  min-width: 3.5rem;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+  font-weight: var(--weight-medium);
 }
 
 .product-table {
