@@ -139,3 +139,18 @@ export const IconSpark = (p: IconProps) => (
     <path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M18 6l-2.5 2.5M8.5 15.5 6 18" />
   </Base>
 );
+
+export const IconExternal = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M14 4h6v6" />
+    <path d="M20 4 10 14" />
+    <path d="M18 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h5" />
+  </Base>
+);
+
+export const IconSort = (p: IconProps) => (
+  <Base {...p}>
+    <path d="M8 4v16M8 20l-3-3M8 4l3 3" />
+    <path d="M16 20V4M16 4l3 3M16 20l-3-3" />
+  </Base>
+);

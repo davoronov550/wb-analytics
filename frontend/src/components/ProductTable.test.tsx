@@ -42,6 +42,25 @@ test("renders product rows", () => {
   expect(screen.getByText("60.00")).toBeInTheDocument();
 });
 
+test("product name links to its Wildberries page", () => {
+  render(<ProductTable products={products} sort={SORT} onSortChange={() => {}} />);
+  const link = screen.getByRole("link", { name: /Наушники беспроводные/ });
+  expect(link).toHaveAttribute(
+    "href",
+    "https://www.wildberries.ru/catalog/1/detail.aspx",
+  );
+  expect(link).toHaveAttribute("target", "_blank");
+});
+
+test("clicking the product link does not trigger the row selection", async () => {
+  const onSelect = vi.fn();
+  render(
+    <ProductTable products={products} sort={SORT} onSortChange={() => {}} onSelect={onSelect} />,
+  );
+  await userEvent.click(screen.getByRole("link", { name: /Наушники беспроводные/ }));
+  expect(onSelect).not.toHaveBeenCalled();
+});
+
 test("clicking an inactive column header requests ascending sort by that field", async () => {
   const onSortChange = vi.fn();
   render(<ProductTable products={products} sort={SORT} onSortChange={onSortChange} />);

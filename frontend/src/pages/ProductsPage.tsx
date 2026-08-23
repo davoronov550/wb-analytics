@@ -1,4 +1,5 @@
 import { FilterBar } from "../components/Filters/FilterBar";
+import { SortSelect } from "../components/Filters/SortSelect";
 import { ProductTable } from "../components/ProductTable";
 import { ExportButtons } from "../components/ExportButtons";
 import { PriceHistoryChart } from "../components/charts/PriceHistoryChart";
@@ -29,6 +30,7 @@ export function ProductsPage() {
         </span>
         {error ? <span className="result-meta__error">{error}</span> : null}
         {filters.query ? <span className="badge badge--accent">Запрос: {filters.query}</span> : null}
+        <SortSelect />
       </div>
 
       <Panel className="page__section" padded={false}>
