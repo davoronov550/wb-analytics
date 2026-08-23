@@ -23,7 +23,12 @@ def _price_kopecks(product: dict, size_key: str, legacy_key: str) -> int | None:
 
 
 def parse_search_response(data: dict | None) -> list[RawProduct]:
-    products = ((data or {}).get("data") or {}).get("products") or []
+    root = data or {}
+    # WB v9 returns products at the top level; older payloads nest them under "data".
+    products = root.get("products")
+    if products is None:
+        products = (root.get("data") or {}).get("products")
+    products = products or []
     result: list[RawProduct] = []
     for product in products:
         wb_id = product.get("id")

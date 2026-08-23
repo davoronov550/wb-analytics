@@ -55,6 +55,27 @@ def test_skips_records_missing_id_or_name():
     assert [r.wb_id for r in parse_search_response(data)] == [4]
 
 
+def test_parses_top_level_products_wb_v9():
+    # WB v9 returns products at the top level (not nested under "data").
+    data = {
+        "products": [
+            {
+                "id": 245763655,
+                "name": "Наушники",
+                "sizes": [{"price": {"basic": 337800, "product": 182000}}],
+                "reviewRating": 4.8,
+                "feedbacks": 539,
+            }
+        ],
+        "total": 100,
+    }
+    (raw,) = parse_search_response(data)
+    assert raw.wb_id == 245763655
+    assert raw.price_kopecks == 337800
+    assert raw.sale_price_kopecks == 182000
+    assert raw.reviews == 539
+
+
 def test_empty_or_malformed_response_returns_empty():
     assert parse_search_response({}) == []
     assert parse_search_response({"data": {}}) == []
