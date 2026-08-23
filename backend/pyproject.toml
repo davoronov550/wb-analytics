@@ -21,6 +21,8 @@ dependencies = [
     "celery>=5.4",                           # async + scheduled work (FE-01/FE-02)
     "redis>=5.0",                            # Celery broker/result
     "openpyxl>=3.1",                         # XLSX export (FE-08)
+    "google-auth>=2.0",                      # verify Google ID tokens (FE-09 sign-in)
+    "requests>=2.31",                        # HTTP transport for google-auth cert fetch
 ]
 
 [project.optional-dependencies]

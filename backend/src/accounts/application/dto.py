@@ -14,3 +14,24 @@ class SavedSearch:
     name: str
     query: str
     filters: dict = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class VerifiedIdentity:
+    """A validated external identity (e.g. a Google account), provider-agnostic."""
+
+    provider: str
+    external_id: str
+    email: str | None = None
+    name: str | None = None
+
+
+@dataclass(frozen=True)
+class AuthenticatedUser:
+    """A local account resolved from a credential; `created` flags a fresh signup."""
+
+    id: int
+    username: str
+    email: str | None = None
+    providers: tuple[str, ...] = ()
+    created: bool = False

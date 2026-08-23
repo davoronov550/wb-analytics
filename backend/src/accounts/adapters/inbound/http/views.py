@@ -9,11 +9,26 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.adapters.inbound.http.serializers import RegisterSerializer, SavedSearchSerializer
+from accounts.adapters.outbound.persistence.models import ExternalIdentityModel
+from accounts.application.errors import InvalidCredential
 from accounts.composition import container
 
 User = get_user_model()
+
+
+def _providers_for(user) -> list[str]:
+    providers: list[str] = ["password"] if user.has_usable_password() else []
+    for provider in (
+        ExternalIdentityModel.objects.filter(user=user)
+        .values_list("provider", flat=True)
+        .distinct()
+    ):
+        if provider not in providers:
+            providers.append(provider)
+    return providers
 
 
 class RegisterView(APIView):
@@ -31,11 +46,47 @@ class RegisterView(APIView):
         return Response({"id": user.id, "username": user.username}, status=201)
 
 
+class GoogleAuthView(APIView):
+    """Exchange a Google ID token for our JWT, provisioning the account if new."""
+
+    permission_classes = [AllowAny]
+
+    def post(self, request: Request) -> Response:
+        credential = request.data.get("id_token")
+        if not credential:
+            raise ValidationError({"id_token": "required"})
+        try:
+            account = container.build_authenticate_with_google().execute(credential)
+        except InvalidCredential:
+            return Response({"detail": "Не удалось подтвердить токен Google."}, status=401)
+        refresh = RefreshToken.for_user(User.objects.get(pk=account.id))
+        return Response(
+            {
+                "access": str(refresh.access_token),
+                "refresh": str(refresh),
+                "user": {
+                    "id": account.id,
+                    "username": account.username,
+                    "email": account.email,
+                    "providers": list(account.providers),
+                },
+            },
+            status=200,
+        )
+
+
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request: Request) -> Response:
-        return Response({"id": request.user.id, "username": request.user.username})
+        return Response(
+            {
+                "id": request.user.id,
+                "username": request.user.username,
+                "email": request.user.email or None,
+                "providers": _providers_for(request.user),
+            }
+        )
 
 
 class LogoutView(APIView):
