@@ -12,5 +12,8 @@ class CeleryTaskQueue:
         self._app = app
 
     def enqueue(self, task_name: str, payload: dict[str, object]) -> str:
-        result = self._app.send_task(task_name, kwargs=payload)
+        # Resolve the registered task and apply_async (honors task_always_eager,
+        # unlike app.send_task, which always routes through the broker).
+        task = self._app.tasks[task_name]
+        result = task.apply_async(kwargs=payload)
         return result.id

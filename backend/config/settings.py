@@ -150,7 +150,10 @@ CORS_ALLOWED_ORIGINS = [
 # --- Celery (async + scheduled work; adapters in T056/T057/T063) ---
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
-CELERY_TASK_ALWAYS_EAGER = os.environ.get("CELERY_TASK_ALWAYS_EAGER", "false").lower() == "true"
+CELERY_TASK_ALWAYS_EAGER = (
+    "pytest" in sys.modules  # run tasks inline under pytest (deterministic, no worker)
+    or os.environ.get("CELERY_TASK_ALWAYS_EAGER", "false").lower() == "true"
+)
 CELERY_TASK_STORE_EAGER_RESULT = True
 
 # --- Wildberries gateway (adapter reads these; T026/T052/T053) ---

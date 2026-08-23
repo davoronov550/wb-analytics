@@ -72,16 +72,26 @@ class _FakeResult:
     id = "celery-id-1"
 
 
-class _FakeCeleryApp:
-    def __init__(self):
-        self.sent: list[tuple[str, dict]] = []
+class _FakeTask:
+    def __init__(self, name, app):
+        self._name = name
+        self._app = app
 
-    def send_task(self, name, kwargs=None):
-        self.sent.append((name, kwargs))
+    def apply_async(self, kwargs=None):
+        self._app.sent.append((self._name, kwargs))
         return _FakeResult()
 
 
-def test_celery_task_queue_delegates_to_send_task():
+class _FakeCeleryApp:
+    def __init__(self):
+        self.sent: list[tuple[str, dict]] = []
+        self.tasks = self  # so app.tasks[name] returns a task bound to this app
+
+    def __getitem__(self, name):
+        return _FakeTask(name, self)
+
+
+def test_celery_task_queue_applies_registered_task():
     app = _FakeCeleryApp()
 
     task_id = CeleryTaskQueue(app).enqueue(COLLECT_TASK_NAME, {"query": "q", "task_id": "x"})
