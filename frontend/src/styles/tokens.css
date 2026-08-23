@@ -1,0 +1,153 @@
+/* =============================================================================
+   Design tokens — WB Analytics
+   Direction: Swiss / editorial. Constant near-black sidebar, light work area,
+   restrained WB-purple accent. All palette/type/space/motion lives here; nothing
+   downstream hardcodes a raw color or size (web/coding-style rule).
+   ============================================================================= */
+
+:root {
+  /* --- Brand accent (WB purple, tuned for AA on light + dark) --- */
+  --wb-purple: oklch(56% 0.19 322);
+  --wb-purple-bright: oklch(66% 0.21 322);
+  --wb-purple-soft: oklch(95% 0.03 322);
+
+  /* --- Content surfaces (light work area) --- */
+  --color-bg: oklch(98.4% 0.003 285);
+  --color-surface: oklch(100% 0 0);
+  --color-surface-2: oklch(97.2% 0.004 285);
+  --color-surface-3: oklch(95% 0.005 285);
+  --color-border: oklch(91% 0.004 285);
+  --color-border-strong: oklch(83% 0.006 285);
+
+  --color-text: oklch(23% 0.012 285);
+  --color-text-muted: oklch(47% 0.012 285);
+  --color-text-faint: oklch(63% 0.01 285);
+  --color-text-invert: oklch(98% 0 0);
+
+  --color-accent: var(--wb-purple);
+  --color-accent-hover: oklch(50% 0.19 322);
+  --color-accent-contrast: oklch(99% 0 0);
+  --color-accent-ring: oklch(66% 0.19 322 / 0.4);
+  --color-accent-tint: var(--wb-purple-soft);
+
+  /* --- Status --- */
+  --color-success: oklch(58% 0.14 155);
+  --color-success-tint: oklch(95% 0.04 155);
+  --color-danger: oklch(56% 0.19 27);
+  --color-danger-tint: oklch(95% 0.04 27);
+  --color-warning: oklch(70% 0.14 75);
+  --color-warning-tint: oklch(96% 0.05 80);
+
+  /* --- Sidebar (constant, theme-independent near-black) --- */
+  --sidebar-bg: oklch(15% 0.005 285);
+  --sidebar-surface: oklch(19% 0.006 285);
+  --sidebar-text: oklch(80% 0.008 285);
+  --sidebar-text-muted: oklch(56% 0.01 285);
+  --sidebar-heading: oklch(52% 0.01 285);
+  --sidebar-active-bg: oklch(27% 0.05 322);
+  --sidebar-active-text: oklch(98% 0 0);
+  --sidebar-hover-bg: oklch(23% 0.006 285);
+  --sidebar-border: oklch(26% 0.006 285);
+  --sidebar-accent: var(--wb-purple-bright);
+
+  /* --- Data-viz series (charts read as one system; dataviz rule) --- */
+  --viz-1: oklch(56% 0.19 322);
+  --viz-2: oklch(62% 0.15 250);
+  --viz-3: oklch(66% 0.14 190);
+  --viz-4: oklch(70% 0.15 145);
+  --viz-5: oklch(76% 0.15 85);
+  --viz-6: oklch(66% 0.18 40);
+  --viz-grid: oklch(90% 0.004 285);
+  --viz-axis: oklch(60% 0.01 285);
+
+  /* --- Typography --- */
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Space Grotesk", var(--font-sans);
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-md: 1.0625rem;
+  --text-lg: 1.375rem;
+  --text-xl: clamp(1.6rem, 1.2rem + 1.4vw, 2.1rem);
+  --text-2xl: clamp(2rem, 1.4rem + 2.4vw, 3rem);
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.55;
+
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-caps: 0.08em;
+
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* --- Spacing scale (4px base) --- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+
+  /* --- Radii --- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* --- Elevation --- */
+  --shadow-xs: 0 1px 2px oklch(20% 0.01 285 / 0.06);
+  --shadow-sm: 0 1px 3px oklch(20% 0.01 285 / 0.08), 0 1px 2px oklch(20% 0.01 285 / 0.04);
+  --shadow-md: 0 4px 12px oklch(20% 0.01 285 / 0.08), 0 2px 4px oklch(20% 0.01 285 / 0.05);
+  --shadow-lg: 0 12px 32px oklch(20% 0.01 285 / 0.12), 0 4px 8px oklch(20% 0.01 285 / 0.06);
+
+  /* --- Motion --- */
+  --duration-fast: 130ms;
+  --duration-normal: 220ms;
+  --duration-slow: 360ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* --- Layout --- */
+  --sidebar-width: 264px;
+  --sidebar-width-collapsed: 72px;
+  --topbar-height: 64px;
+  --content-max: 1440px;
+  --z-sidebar: 40;
+  --z-topbar: 30;
+  --z-drawer: 60;
+  --z-toast: 80;
+}
+
+/* Optional full dark work area — opt-in via [data-theme="dark"] on <html>.
+   The sidebar is already dark, so only the content tokens flip. */
+:root[data-theme="dark"] {
+  --color-bg: oklch(16% 0.005 285);
+  --color-surface: oklch(20% 0.006 285);
+  --color-surface-2: oklch(23% 0.006 285);
+  --color-surface-3: oklch(26% 0.006 285);
+  --color-border: oklch(30% 0.006 285);
+  --color-border-strong: oklch(38% 0.008 285);
+
+  --color-text: oklch(93% 0.006 285);
+  --color-text-muted: oklch(70% 0.01 285);
+  --color-text-faint: oklch(56% 0.01 285);
+
+  --color-accent: var(--wb-purple-bright);
+  --color-accent-tint: oklch(30% 0.06 322);
+
+  --viz-grid: oklch(32% 0.006 285);
+  --viz-axis: oklch(60% 0.01 285);
+
+  --shadow-sm: 0 1px 3px oklch(0% 0 0 / 0.4);
+  --shadow-md: 0 4px 12px oklch(0% 0 0 / 0.45);
+  --shadow-lg: 0 12px 32px oklch(0% 0 0 / 0.55);
+}

@@ -144,7 +144,11 @@ REST_FRAMEWORK = {
 
 # --- CORS (frontend dev origin) ---
 CORS_ALLOWED_ORIGINS = [
-    o for o in os.environ.get("CORS_ORIGIN", "http://localhost:5173").split(",") if o
+    o
+    for o in os.environ.get(
+        "CORS_ORIGIN", "http://localhost:5173,http://127.0.0.1:5173"
+    ).split(",")
+    if o
 ]
 
 # --- Celery (async + scheduled work; adapters in T056/T057/T063) ---

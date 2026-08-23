@@ -64,6 +64,9 @@ export interface Schedule {
 export interface User {
   id: number;
   username: string;
+  email?: string | null;
+  /** Identity providers linked to this account, e.g. ["password", "google"]. */
+  providers?: string[];
 }
 
 export interface SavedSearch {
