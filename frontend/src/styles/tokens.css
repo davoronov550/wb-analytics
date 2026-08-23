@@ -117,7 +117,7 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
   /* --- Layout --- */
-  --sidebar-width: 264px;
+  --sidebar-width: 228px;
   --sidebar-width-collapsed: 72px;
   --topbar-height: 64px;
   --content-max: 1440px;
