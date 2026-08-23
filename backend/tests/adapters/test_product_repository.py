@@ -79,6 +79,28 @@ class TestList:
         )
         assert [p.wb_id for p in page.items] == [1]
 
+    def test_filter_rating_range_applies_both_bounds(self):
+        repo = DjangoProductRepository()
+        self._seed(repo)  # ratings: #1=4.8, #2=4.2, #3=3.5
+        page = repo.list(
+            ProductFilter(min_rating=Decimal("4.0"), max_rating=Decimal("4.5")),
+            Ordering(field="rating"),
+            1,
+            100,
+        )
+        assert [p.wb_id for p in page.items] == [2]
+
+    def test_filter_reviews_range_applies_both_bounds(self):
+        repo = DjangoProductRepository()
+        self._seed(repo)  # reviews: #1=500, #2=50, #3=1000
+        page = repo.list(
+            ProductFilter(min_reviews=100, max_reviews=800),
+            Ordering(field="reviews_count"),
+            1,
+            100,
+        )
+        assert [p.wb_id for p in page.items] == [1]
+
     def test_ordering_ascending_and_descending(self):
         repo = DjangoProductRepository()
         self._seed(repo)

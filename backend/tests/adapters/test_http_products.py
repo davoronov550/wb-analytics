@@ -20,15 +20,27 @@ class TestParseProductFilter:
                 "min_price": "5000",
                 "max_price": "20000",
                 "min_rating": "4",
+                "max_rating": "4.8",
                 "min_reviews": "100",
+                "max_reviews": "900",
                 "query": "наушники",
             }
         )
         assert result.min_price == Decimal("5000")
         assert result.max_price == Decimal("20000")
         assert result.min_rating == Decimal("4")
+        assert result.max_rating == Decimal("4.8")
         assert result.min_reviews == 100
+        assert result.max_reviews == 900
         assert result.query == "наушники"
+
+    def test_min_rating_greater_than_max_rating_raises(self):
+        with pytest.raises(InvalidFilter):
+            parse_product_filter({"min_rating": "4.5", "max_rating": "4.0"})
+
+    def test_min_reviews_greater_than_max_reviews_raises(self):
+        with pytest.raises(InvalidFilter):
+            parse_product_filter({"min_reviews": "100", "max_reviews": "50"})
 
     def test_empty_params_yield_all_none(self):
         result = parse_product_filter({})

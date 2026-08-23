@@ -46,8 +46,12 @@ class DjangoProductRepository:
             qs = qs.filter(sale_price__lte=filter.max_price)
         if filter.min_rating is not None:
             qs = qs.filter(rating__gte=filter.min_rating)
+        if filter.max_rating is not None:
+            qs = qs.filter(rating__lte=filter.max_rating)
         if filter.min_reviews is not None:
             qs = qs.filter(reviews_count__gte=filter.min_reviews)
+        if filter.max_reviews is not None:
+            qs = qs.filter(reviews_count__lte=filter.max_reviews)
         if filter.query:
             qs = qs.filter(source_query__text__iexact=filter.query)
 

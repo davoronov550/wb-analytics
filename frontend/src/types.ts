@@ -17,7 +17,9 @@ export interface Filters {
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;
+  maxRating?: number;
   minReviews?: number;
+  maxReviews?: number;
   query?: string;
 }
 

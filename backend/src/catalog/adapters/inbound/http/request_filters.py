@@ -39,7 +39,9 @@ def parse_product_filter(params: Mapping) -> ProductFilter:
     min_price = _decimal(params, "min_price")
     max_price = _decimal(params, "max_price")
     min_rating = _decimal(params, "min_rating")
+    max_rating = _decimal(params, "max_rating")
     min_reviews = _int(params, "min_reviews")
+    max_reviews = _int(params, "max_reviews")
     query = params.get("query") or None
 
     if min_price is not None and min_price < 0:
@@ -48,16 +50,25 @@ def parse_product_filter(params: Mapping) -> ProductFilter:
         raise InvalidFilter("max_price must be >= 0")
     if min_price is not None and max_price is not None and min_price > max_price:
         raise InvalidFilter("min_price must be <= max_price")
-    if min_rating is not None and not (Decimal("0") <= min_rating <= Decimal("5")):
-        raise InvalidFilter("min_rating must be within [0, 5]")
+    for key, value in (("min_rating", min_rating), ("max_rating", max_rating)):
+        if value is not None and not (Decimal("0") <= value <= Decimal("5")):
+            raise InvalidFilter(f"{key} must be within [0, 5]")
+    if min_rating is not None and max_rating is not None and min_rating > max_rating:
+        raise InvalidFilter("min_rating must be <= max_rating")
     if min_reviews is not None and min_reviews < 0:
         raise InvalidFilter("min_reviews must be >= 0")
+    if max_reviews is not None and max_reviews < 0:
+        raise InvalidFilter("max_reviews must be >= 0")
+    if min_reviews is not None and max_reviews is not None and min_reviews > max_reviews:
+        raise InvalidFilter("min_reviews must be <= max_reviews")
 
     return ProductFilter(
         min_price=min_price,
         max_price=max_price,
         min_rating=min_rating,
+        max_rating=max_rating,
         min_reviews=min_reviews,
+        max_reviews=max_reviews,
         query=query,
     )
 

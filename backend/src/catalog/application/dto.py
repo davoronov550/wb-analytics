@@ -108,12 +108,15 @@ class ProductView:
 
 @dataclass(frozen=True)
 class ProductFilter:
-    """Price bounds apply to sale price (what the buyer pays). All optional."""
+    """Price/rating/reviews are two-sided ranges; price bounds apply to sale
+    price (what the buyer pays). All optional and combined with AND."""
 
     min_price: Decimal | None = None
     max_price: Decimal | None = None
     min_rating: Decimal | None = None
+    max_rating: Decimal | None = None
     min_reviews: int | None = None
+    max_reviews: int | None = None
     query: str | None = None
 
 

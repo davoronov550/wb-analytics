@@ -8,7 +8,9 @@ export function buildProductsQuery(filters: Filters, sort: Sort): string {
   if (filters.minPrice != null) params.set("min_price", String(filters.minPrice));
   if (filters.maxPrice != null) params.set("max_price", String(filters.maxPrice));
   if (filters.minRating != null) params.set("min_rating", String(filters.minRating));
+  if (filters.maxRating != null) params.set("max_rating", String(filters.maxRating));
   if (filters.minReviews != null) params.set("min_reviews", String(filters.minReviews));
+  if (filters.maxReviews != null) params.set("max_reviews", String(filters.maxReviews));
   if (filters.query) params.set("query", filters.query);
   params.set("ordering", `${sort.descending ? "-" : ""}${sort.field}`);
   return params.toString();

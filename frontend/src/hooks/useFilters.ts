@@ -20,7 +20,9 @@ function parseFromUrl(): FilterState {
   if (sp.get("min_price") != null) filters.minPrice = num("min_price");
   if (sp.get("max_price") != null) filters.maxPrice = num("max_price");
   if (sp.get("min_rating") != null) filters.minRating = num("min_rating");
+  if (sp.get("max_rating") != null) filters.maxRating = num("max_rating");
   if (sp.get("min_reviews") != null) filters.minReviews = num("min_reviews");
+  if (sp.get("max_reviews") != null) filters.maxReviews = num("max_reviews");
   const query = sp.get("query");
   if (query) filters.query = query;
 
@@ -39,7 +41,9 @@ function writeToUrl(filters: Filters, sort: Sort): void {
   if (filters.minPrice != null) sp.set("min_price", String(filters.minPrice));
   if (filters.maxPrice != null) sp.set("max_price", String(filters.maxPrice));
   if (filters.minRating != null) sp.set("min_rating", String(filters.minRating));
+  if (filters.maxRating != null) sp.set("max_rating", String(filters.maxRating));
   if (filters.minReviews != null) sp.set("min_reviews", String(filters.minReviews));
+  if (filters.maxReviews != null) sp.set("max_reviews", String(filters.maxReviews));
   if (filters.query) sp.set("query", filters.query);
   sp.set("ordering", `${sort.descending ? "-" : ""}${sort.field}`);
   const qs = sp.toString();
