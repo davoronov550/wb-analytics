@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type ColumnDef,
   type PaginationState,
+  type SortingFn,
+  type SortingState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
@@ -26,8 +29,9 @@ function initialPageSize(): number {
 
 interface Props {
   products: Product[];
-  sort: Sort;
-  onSortChange: (sort: Sort) => void;
+  /** Ordered sort keys (multi-sort); first key is primary. */
+  sortKeys: Sort[];
+  onSortKeysChange: (keys: Sort[]) => void;
   onSelect?: (wbId: number) => void;
   /** Total matching rows on the server (for the "first N of M" hint). */
   totalCount?: number;
@@ -48,6 +52,14 @@ const COLUMNS: ColumnSpec[] = [
   { field: "reviews_count", header: "Отзывы", numeric: true, value: (p) => p.reviews_count },
 ];
 
+// Numeric columns carry decimal strings ("1399.50") — parse before comparing so
+// the client sort orders by value, not lexically.
+const numericSort: SortingFn<Product> = (a, b, id) => {
+  const av = parseFloat(String(a.getValue(id))) || 0;
+  const bv = parseFloat(String(b.getValue(id))) || 0;
+  return av - bv;
+};
+
 /** Name cell links to the item's Wildberries page; the click is isolated so the
  *  surrounding row-click (open price history) still works elsewhere in the row. */
 function NameCell({ product }: { product: Product }) {
@@ -66,26 +78,52 @@ function NameCell({ product }: { product: Product }) {
   );
 }
 
-export function ProductTable({ products, sort, onSortChange, onSelect, totalCount }: Props) {
+const toSortingState = (keys: Sort[]): SortingState =>
+  keys.map((k) => ({ id: k.field, desc: k.descending }));
+
+export function ProductTable({
+  products,
+  sortKeys,
+  onSortKeysChange,
+  onSelect,
+  totalCount,
+}: Props) {
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: initialPageSize(),
   });
 
-  // Sorting is server-side: a header click emits the desired Ordering; the table
-  // renders rows exactly as received (no local re-sort). Pagination is client-side.
+  // Stable reference so TanStack does not see "new sorting" every render.
+  const sorting = useMemo(() => toSortingState(sortKeys), [sortKeys]);
+
+  // A header click sets that column as the sole sort key, toggling direction if
+  // it is already the primary. Multi-key sorting is built in the sort panel.
+  const toggleSingle = (field: OrderableField) => {
+    const primary = sortKeys[0];
+    if (primary && primary.field === field) {
+      onSortKeysChange([{ field, descending: !primary.descending }]);
+    } else {
+      onSortKeysChange([{ field, descending: false }]);
+    }
+  };
+
   const columns: ColumnDef<Product>[] = COLUMNS.map((spec) => ({
     id: spec.field,
     accessorFn: spec.value,
-    header: () => {
-      const active = sort.field === spec.field;
-      const next: Sort = active
-        ? { field: spec.field, descending: !sort.descending }
-        : { field: spec.field, descending: false };
+    sortingFn: spec.numeric && spec.field !== "reviews_count" ? numericSort : "auto",
+    header: ({ column }) => {
+      const dir = column.getIsSorted(); // 'asc' | 'desc' | false
+      const index = column.getSortIndex(); // 0-based order among active keys
+      const multi = sorting.length > 1;
       return (
-        <button type="button" className="th-sort" onClick={() => onSortChange(next)}>
+        <button type="button" className="th-sort" onClick={() => toggleSingle(spec.field)}>
           {spec.header}
-          {active ? <span aria-hidden="true">{sort.descending ? " ↓" : " ↑"}</span> : null}
+          {dir ? (
+            <span className="th-sort__ind" aria-hidden="true">
+              {dir === "desc" ? "↓" : "↑"}
+              {multi ? <span className="th-sort__order">{index + 1}</span> : null}
+            </span>
+          ) : null}
         </button>
       );
     },
@@ -100,17 +138,22 @@ export function ProductTable({ products, sort, onSortChange, onSelect, totalCoun
   const table = useReactTable({
     data: products,
     columns,
-    state: { pagination },
+    state: { sorting, pagination },
     onPaginationChange: setPagination,
+    // We reset the page ourselves (below); disable the built-in auto-reset so it
+    // does not fight our controlled pagination and loop.
+    autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  // Reset to the first page whenever the data set changes (filters, sort, or a
-  // fresh collection) so the user never lands on a now-empty page.
+  // Reset to the first page whenever the data or ordering changes so the user
+  // never lands on a now-empty page.
+  const sortSignature = JSON.stringify(sortKeys);
   useEffect(() => {
     setPagination((p) => ({ ...p, pageIndex: 0 }));
-  }, [products]);
+  }, [products, sortSignature]);
 
   const persistPageSize = (size: number) => {
     localStorage.setItem(PAGE_SIZE_KEY, String(size));
@@ -120,45 +163,48 @@ export function ProductTable({ products, sort, onSortChange, onSelect, totalCoun
   return (
     <div className="product-table__wrap">
       <div className="product-table__scroll">
-      <table className="product-table">
-        <thead>
-          {table.getHeaderGroups().map((group) => (
-            <tr key={group.id}>
-              {group.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className={header.column.id === "name" ? "col-name" : "col-num"}
-                >
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {products.length === 0 ? (
-            <tr>
-              <td colSpan={COLUMNS.length} className="product-table__empty">
-                Ничего не найдено
-              </td>
-            </tr>
-          ) : (
-            table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className={onSelect ? "product-table__row--clickable" : undefined}
-                onClick={onSelect ? () => onSelect(row.original.wb_id) : undefined}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className={cell.column.id === "name" ? "col-name" : "col-num"}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
+        <table className="product-table">
+          <thead>
+            {table.getHeaderGroups().map((group) => (
+              <tr key={group.id}>
+                {group.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className={header.column.id === "name" ? "col-name" : "col-num"}
+                  >
+                    {flexRender(header.column.columnDef.header, header.getContext())}
+                  </th>
                 ))}
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </thead>
+          <tbody>
+            {products.length === 0 ? (
+              <tr>
+                <td colSpan={COLUMNS.length} className="product-table__empty">
+                  Ничего не найдено
+                </td>
+              </tr>
+            ) : (
+              table.getRowModel().rows.map((row) => (
+                <tr
+                  key={row.id}
+                  className={onSelect ? "product-table__row--clickable" : undefined}
+                  onClick={onSelect ? () => onSelect(row.original.wb_id) : undefined}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <td
+                      key={cell.id}
+                      className={cell.column.id === "name" ? "col-name" : "col-num"}
+                    >
+                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
       {products.length > 0 ? (
         <TablePagination

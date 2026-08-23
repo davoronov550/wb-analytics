@@ -130,6 +130,24 @@
 .th-sort:hover {
   color: var(--color-accent);
 }
+.th-sort__ind {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--color-accent);
+}
+.th-sort__order {
+  display: inline-grid;
+  place-items: center;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent-tint);
+  color: var(--color-accent-hover);
+  font-size: 0.625rem;
+  font-weight: var(--weight-semibold);
+}
 
 .product-table tbody td {
   padding: 0.7rem 1rem;

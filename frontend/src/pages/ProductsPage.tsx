@@ -1,18 +1,29 @@
 import { useState } from "react";
 
 import { FilterRail } from "../components/Filters/FilterRail";
-import { SortSelect } from "../components/Filters/SortSelect";
+import { SortBuilder } from "../components/Filters/SortBuilder";
 import { ProductTable } from "../components/ProductTable";
 import { ExportButtons } from "../components/ExportButtons";
 import { PriceHistoryChart } from "../components/charts/PriceHistoryChart";
 import { useQueryState } from "../context/QueryContext";
 import { EmptyState, PageHeader, Panel } from "../components/ui/primitives";
 import { IconCatalog, IconSort } from "../components/ui/icons";
+import { DEFAULT_SORT } from "../lib/sortFields";
+import type { Sort } from "../types";
 
 export function ProductsPage() {
   const { filters, sort, setSort, products, count, loading, error, selectedWbId, setSelectedWbId } =
     useQueryState();
   const [railOpen, setRailOpen] = useState(false);
+  // Multi-sort key list (client-side); the primary key is mirrored to the server
+  // ordering so the loaded page (at the row cap) is the right slice.
+  const [sortKeys, setSortKeys] = useState<Sort[]>(() => [sort]);
+
+  const applySortKeys = (keys: Sort[]) => {
+    const next = keys.length > 0 ? keys : [DEFAULT_SORT];
+    setSortKeys(next);
+    setSort(next[0]);
+  };
 
   return (
     <div className="page">
@@ -61,7 +72,7 @@ export function ProductsPage() {
             {filters.query ? (
               <span className="badge badge--accent">Запрос: {filters.query}</span>
             ) : null}
-            <SortSelect />
+            <SortBuilder sortKeys={sortKeys} onChange={applySortKeys} />
           </div>
 
           <Panel className="page__section" padded={false}>
@@ -74,8 +85,8 @@ export function ProductsPage() {
             ) : (
               <ProductTable
                 products={products}
-                sort={sort}
-                onSortChange={setSort}
+                sortKeys={sortKeys}
+                onSortKeysChange={applySortKeys}
                 onSelect={setSelectedWbId}
                 totalCount={count}
               />
