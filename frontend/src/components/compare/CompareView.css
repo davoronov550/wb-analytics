@@ -1,0 +1,56 @@
+/* Side-by-side query comparison: a small form plus a metric matrix. */
+
+.compare {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.compare__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.compare__form .input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.compare__form .btn {
+  flex-shrink: 0;
+}
+
+.compare__error {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
+
+.compare__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.compare__table th,
+.compare__table td {
+  padding: 0.6rem 0.85rem;
+  text-align: right;
+  border-bottom: 1px solid var(--color-border);
+  font-variant-numeric: tabular-nums;
+}
+.compare__table thead th {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-accent);
+  background: var(--color-surface-2);
+  border-bottom-color: var(--color-border-strong);
+}
+.compare__table tbody td:first-child,
+.compare__table thead th:first-child {
+  text-align: left;
+  color: var(--color-text-muted);
+  font-variant-numeric: normal;
+}
+.compare__table tbody tr:last-child td {
+  border-bottom: none;
+}

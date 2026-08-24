@@ -1,6 +1,12 @@
 import { type FormEvent, useEffect, useState } from "react";
 
 import { type AlertRule, createAlert, deleteAlert, listAlerts } from "../../api/alerts";
+import "../ui/manager.css";
+
+const KIND_LABELS: Record<string, string> = {
+  abs_below: "цена ниже",
+  pct_drop: "падение %",
+};
 
 /** Manage price alerts. Requires authentication. */
 export function AlertManager() {
@@ -43,42 +49,75 @@ export function AlertManager() {
   };
 
   return (
-    <section className="alerts">
-      <h2>Алерты по цене</h2>
-      <form className="alerts__form" onSubmit={submit}>
+    <section className="manager">
+      <form className="manager__form" onSubmit={submit}>
         <input
+          className="input"
           aria-label="Запрос алерта"
           placeholder="Запрос (напр. наушники)"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
-        <select aria-label="Условие" value={kind} onChange={(e) => setKind(e.target.value)}>
+        <select
+          className="select"
+          aria-label="Условие"
+          value={kind}
+          onChange={(e) => setKind(e.target.value)}
+        >
           <option value="abs_below">цена ниже</option>
           <option value="pct_drop">падение %</option>
         </select>
         <input
+          className="input input--narrow"
           aria-label="Значение"
           type="number"
           value={value}
           onChange={(e) => setValue(e.target.value)}
         />
-        <select aria-label="Канал" value={channel} onChange={(e) => setChannel(e.target.value)}>
+        <select
+          className="select"
+          aria-label="Канал"
+          value={channel}
+          onChange={(e) => setChannel(e.target.value)}
+        >
           <option value="email">email</option>
           <option value="telegram">telegram</option>
         </select>
-        <button type="submit">Добавить</button>
+        <button type="submit" className="btn btn--primary">
+          Добавить
+        </button>
       </form>
-      {error ? <p className="alerts__error">{error}</p> : null}
-      <ul className="alerts__list">
-        {rules.map((rule) => (
-          <li key={rule.id}>
-            {rule.target_query ?? rule.target_wb_id} · {rule.kind} {rule.value} · {rule.channel}
-            <button type="button" onClick={() => remove(rule.id)}>
-              Удалить
-            </button>
-          </li>
-        ))}
-      </ul>
+
+      {error ? <p className="manager__error">{error}</p> : null}
+
+      {rules.length === 0 ? (
+        <p className="manager__empty">Алертов пока нет — создайте первое правило выше.</p>
+      ) : (
+        <ul className="manager__list">
+          {rules.map((rule) => (
+            <li key={rule.id} className="manager__item">
+              <span className="manager__item-main">
+                <span className="manager__item-title">
+                  {rule.target_query ?? rule.target_wb_id}
+                </span>
+                <span className="badge badge--accent">
+                  {KIND_LABELS[rule.kind] ?? rule.kind} {rule.value}
+                </span>
+                <span className="manager__item-meta">{rule.channel}</span>
+              </span>
+              <span className="manager__actions">
+                <button
+                  type="button"
+                  className="btn btn--danger btn--sm"
+                  onClick={() => remove(rule.id)}
+                >
+                  Удалить
+                </button>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   );
 }

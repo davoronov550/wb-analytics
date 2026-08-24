@@ -1,0 +1,17 @@
+/* Shared chart frame: recharts renders a fixed-size SVG; scale it to the panel. */
+
+.chart {
+  margin: 0;
+  width: 100%;
+  overflow-x: auto;
+}
+.chart svg {
+  max-width: 100%;
+  height: auto;
+}
+.chart__empty {
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-text-faint);
+  font-size: var(--text-sm);
+}

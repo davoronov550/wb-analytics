@@ -3,6 +3,7 @@ import { CartesianGrid, Line, LineChart, Tooltip, XAxis, YAxis } from "recharts"
 
 import { getHistory } from "../../api/history";
 import type { PriceSnapshot } from "../../types";
+import "./charts.css";
 
 interface Props {
   wbId: number;
@@ -36,20 +37,20 @@ export function PriceHistoryChart({ wbId, width = 520, height = 260 }: Props) {
 
   return (
     <figure className="chart chart--history">
-      <figcaption>История цены · товар {wbId}</figcaption>
+      <figcaption className="visually-hidden">История цены · товар {wbId}</figcaption>
       {error ? <p className="chart__empty">{error}</p> : null}
       {data.length === 0 ? (
         <p className="chart__empty">Нет данных</p>
       ) : (
         <LineChart width={width} height={height} data={data}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="at" tick={{ fontSize: 11 }} />
-          <YAxis allowDecimals={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--viz-grid)" />
+          <XAxis dataKey="at" tick={{ fontSize: 11, fill: "var(--viz-axis)" }} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: "var(--viz-axis)" }} />
           <Tooltip />
           <Line
             dataKey="sale_price"
             name="Цена со скидкой, ₽"
-            stroke="#7c5cff"
+            stroke="var(--viz-1)"
             dot={{ r: 2 }}
             isAnimationActive={false}
           />

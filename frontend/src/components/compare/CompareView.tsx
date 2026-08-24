@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { getComparison, type QueryStats } from "../../api/compare";
+import "./CompareView.css";
 
 /** Compare two queries side by side. */
 export function CompareView() {
@@ -30,21 +31,22 @@ export function CompareView() {
 
   return (
     <section className="compare">
-      <h2>Сравнение запросов</h2>
       <div className="compare__form">
         <input
+          className="input"
           aria-label="Запрос 1"
           placeholder="Запрос 1"
           value={first}
           onChange={(e) => setFirst(e.target.value)}
         />
         <input
+          className="input"
           aria-label="Запрос 2"
           placeholder="Запрос 2"
           value={second}
           onChange={(e) => setSecond(e.target.value)}
         />
-        <button type="button" onClick={compare}>
+        <button type="button" className="btn btn--primary" onClick={compare}>
           Сравнить
         </button>
       </div>

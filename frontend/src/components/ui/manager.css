@@ -1,0 +1,98 @@
+/* Shared layout for the CRUD "manager" panels (schedules, alerts, saved searches):
+   an inline create form on top, a divided record list below. */
+
+.manager {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.manager__form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+.manager__form .input,
+.manager__form .select {
+  width: auto;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+.manager__form .select {
+  flex: 0 1 150px;
+}
+.manager__form .input--narrow {
+  flex: 0 1 120px;
+}
+.manager__form .btn {
+  flex-shrink: 0;
+}
+
+.manager__error {
+  font-size: var(--text-sm);
+  color: var(--color-danger);
+}
+
+.manager__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.manager__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0.7rem 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+}
+.manager__item:last-child {
+  border-bottom: none;
+}
+.manager__item-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+.manager__item-title {
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.manager__item-meta {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+.manager__actions {
+  display: inline-flex;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.manager__empty {
+  padding: var(--space-4) 0;
+  color: var(--color-text-faint);
+  font-size: var(--text-sm);
+}
+
+/* Clickable saved-search name */
+.manager__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: var(--weight-medium);
+  color: var(--color-accent);
+  text-align: left;
+  cursor: pointer;
+}
+.manager__link:hover {
+  text-decoration: underline;
+}
