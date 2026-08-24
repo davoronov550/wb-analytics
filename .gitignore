@@ -26,3 +26,5 @@ Thumbs.db
 
 # Celery beat runtime schedule (local artifact)
 backend/celerybeat-schedule*
+.coverage
+htmlcov/
