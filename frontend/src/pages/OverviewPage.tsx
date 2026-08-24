@@ -42,7 +42,7 @@ export function OverviewPage() {
             title={loading ? "Загрузка данных…" : "Пока нет данных"}
             hint="Запустите сбор по запросу в строке сверху или откройте каталог, чтобы начать работу."
             action={
-              <Link to="/products" className="btn btn--primary btn--sm">
+              <Link to="/app/products" className="btn btn--primary btn--sm">
                 Открыть каталог
               </Link>
             }

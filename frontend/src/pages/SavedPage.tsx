@@ -21,7 +21,7 @@ export function SavedPage() {
           filters={filters}
           onApply={(saved) => {
             setFilters(saved.filters as Filters);
-            navigate("/products");
+            navigate("/app/products");
           }}
         />
       </Panel>

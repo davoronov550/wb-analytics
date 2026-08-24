@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 import { useQueryState } from "../context/QueryContext";
@@ -17,7 +17,6 @@ function initials(name: string): string {
 export function Topbar({ onOpenMenu }: TopbarProps) {
   const { user, logout } = useAuth();
   const { patchFilters, reload } = useQueryState();
-  const navigate = useNavigate();
 
   const handleParsed = (query: string) => {
     patchFilters({ query });
@@ -40,7 +39,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
       <div className="topbar__user">
         {user ? (
           <>
-            <Link to="/settings" className="topbar__chip" title="Профиль">
+            <Link to="/app/settings" className="topbar__chip" title="Профиль">
               <span className="topbar__avatar">{initials(user.username)}</span>
               <span className="topbar__username">{user.username}</span>
             </Link>
@@ -54,24 +53,7 @@ export function Topbar({ onOpenMenu }: TopbarProps) {
               <span className="topbar__logout-label">Выйти</span>
             </button>
           </>
-        ) : (
-          <>
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={() => navigate("/login")}
-            >
-              Войти
-            </button>
-            <button
-              type="button"
-              className="btn btn--primary btn--sm"
-              onClick={() => navigate("/register")}
-            >
-              Регистрация
-            </button>
-          </>
-        )}
+        ) : null}
       </div>
     </header>
   );

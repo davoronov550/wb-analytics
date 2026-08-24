@@ -1,13 +1,11 @@
 import { NavLink } from "react-router-dom";
 
-import { useAuth } from "../context/AuthContext";
 import {
   IconAlert,
   IconAnalytics,
   IconCatalog,
   IconChevron,
   IconHistory,
-  IconLock,
   IconOverview,
   IconSaved,
   IconSchedule,
@@ -21,7 +19,6 @@ interface NavItem {
   label: string;
   icon: (p: { className?: string }) => JSX.Element;
   end?: boolean;
-  gated?: boolean;
 }
 
 interface NavGroup {
@@ -33,18 +30,18 @@ const GROUPS: NavGroup[] = [
   {
     heading: "Данные",
     items: [
-      { to: "/", label: "Обзор", icon: IconOverview, end: true },
-      { to: "/products", label: "Каталог", icon: IconCatalog },
-      { to: "/analytics", label: "Аналитика", icon: IconAnalytics },
-      { to: "/history", label: "История цен", icon: IconHistory },
+      { to: "/app", label: "Обзор", icon: IconOverview, end: true },
+      { to: "/app/products", label: "Каталог", icon: IconCatalog },
+      { to: "/app/analytics", label: "Аналитика", icon: IconAnalytics },
+      { to: "/app/history", label: "История цен", icon: IconHistory },
     ],
   },
   {
     heading: "Автоматизация",
     items: [
-      { to: "/schedules", label: "Расписания", icon: IconSchedule, gated: true },
-      { to: "/alerts", label: "Алерты", icon: IconAlert, gated: true },
-      { to: "/saved", label: "Сохранённые", icon: IconSaved, gated: true },
+      { to: "/app/schedules", label: "Расписания", icon: IconSchedule },
+      { to: "/app/alerts", label: "Алерты", icon: IconAlert },
+      { to: "/app/saved", label: "Сохранённые", icon: IconSaved },
     ],
   },
 ];
@@ -56,11 +53,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarProps) {
-  const { user } = useAuth();
-
   const renderItem = (item: NavItem) => {
     const Icon = item.icon;
-    const locked = item.gated && !user;
     return (
       <li key={item.to}>
         <NavLink
@@ -74,11 +68,6 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarPro
             <Icon />
           </span>
           <span className="nav-item__label">{item.label}</span>
-          {locked ? (
-            <span className="nav-item__lock" title="Требуется вход">
-              <IconLock className="nav-item__lock-icon" />
-            </span>
-          ) : null}
         </NavLink>
       </li>
     );
@@ -106,7 +95,7 @@ export function Sidebar({ collapsed, onToggleCollapsed, onNavigate }: SidebarPro
 
       <div className="sidebar__footer">
         <ul className="sidebar__list">
-          {renderItem({ to: "/settings", label: "Профиль", icon: IconSettings, gated: true })}
+          {renderItem({ to: "/app/settings", label: "Профиль", icon: IconSettings })}
         </ul>
         <button
           type="button"

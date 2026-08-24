@@ -15,7 +15,7 @@ export function RegisterPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (user) navigate("/", { replace: true });
+    if (user) navigate("/app", { replace: true });
   }, [user, navigate]);
 
   const submit = async (event: FormEvent) => {
@@ -28,7 +28,7 @@ export function RegisterPage() {
     setBusy(true);
     try {
       await register(username.trim(), password);
-      navigate("/", { replace: true });
+      navigate("/app", { replace: true });
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Не удалось зарегистрироваться");
     } finally {

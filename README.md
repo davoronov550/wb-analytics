@@ -75,6 +75,9 @@ npm install
 npm run dev                          # http://localhost:5173
 ```
 
+`/` is the public landing page with sign-up / sign-in (password or Google);
+the workspace lives under `/app` and requires an account.
+
 ## API
 
 | Method & path | Purpose |
