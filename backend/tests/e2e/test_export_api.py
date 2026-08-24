@@ -1,4 +1,4 @@
-"""E2E tests (T088) for GET /api/export/ (FE-08) — need the DB (@django_db)."""
+"""E2E tests for GET /api/export/ — need the DB (@django_db)."""
 
 from decimal import Decimal
 

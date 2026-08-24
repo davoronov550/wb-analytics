@@ -1,4 +1,4 @@
-"""Export tests (T088) — writers + ExportProducts use case, offline (no DB)."""
+"""Export tests — writers + ExportProducts use case, offline (no DB)."""
 
 from decimal import Decimal
 from io import BytesIO

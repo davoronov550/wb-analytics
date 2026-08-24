@@ -2,7 +2,7 @@ import type { Filters } from "../types";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 
-/** Build a download URL for the current filtered set (FE-08). */
+/** Build a download URL for the current filtered set. */
 export function buildExportUrl(filters: Filters, format: "csv" | "xlsx"): string {
   const params = new URLSearchParams();
   if (filters.minPrice != null) params.set("min_price", String(filters.minPrice));

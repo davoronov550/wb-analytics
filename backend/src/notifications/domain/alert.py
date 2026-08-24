@@ -1,4 +1,4 @@
-"""Notifications domain: alert rules and the pure evaluation policy (FE-07)."""
+"""Notifications domain: alert rules and the pure evaluation policy."""
 
 from __future__ import annotations
 

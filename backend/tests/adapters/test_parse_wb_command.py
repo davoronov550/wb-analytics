@@ -1,11 +1,11 @@
-"""CLI smoke test for the `parse_wb` management command (T024).
+"""CLI smoke test for the `parse_wb` management command.
 
-RED before T028. The command is a thin inbound adapter: it parses args into a
+ The command is a thin inbound adapter: it parses args into a
 CollectInput and delegates to the CollectProducts use case resolved from the
 composition root, then prints a short summary. No network/DB here — the use case
 is faked by patching the composition factory.
 
-NOTE for T028: the CLI package must be a registered Django app (AppConfig, no
+: the CLI package must be a registered Django app (AppConfig, no
 models) so Django discovers the command, and the command must resolve the use case
 via the module attribute `container.build_collect_products()` (so this patch works).
 """

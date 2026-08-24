@@ -23,7 +23,7 @@ class SearchQueryModel(models.Model):
 
 
 class ProductModel(models.Model):
-    """A Wildberries product; ``wb_id`` is the idempotent upsert key (FR-004)."""
+    """A Wildberries product; ``wb_id`` is the idempotent upsert key."""
 
     wb_id = models.BigIntegerField(unique=True, db_index=True)
     name = models.CharField(max_length=512)
@@ -56,7 +56,7 @@ class ProductModel(models.Model):
 
 
 class ParseJobModel(models.Model):
-    """Status of an asynchronous collection run (FE-02)."""
+    """Status of an asynchronous collection run."""
 
     task_id = models.CharField(primary_key=True, max_length=64)
     query = models.CharField(max_length=200, db_index=True)

@@ -7,7 +7,7 @@ from django.db import models
 
 
 class ScheduleModel(models.Model):
-    """A periodic collection schedule for a query (FE-01)."""
+    """A periodic collection schedule for a query."""
 
     query = models.CharField(max_length=200)
     spec = models.CharField(max_length=50)

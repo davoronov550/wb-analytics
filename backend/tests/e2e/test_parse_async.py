@@ -1,4 +1,4 @@
-"""E2E tests (T055) for async collection: POST /api/parse/ + GET /api/tasks/{id}/.
+"""E2E tests for async collection: POST /api/parse/ + GET /api/tasks/{id}/.
 
 The happy path and the 404 lookup require the DB (@django_db, deferred until
 PostgreSQL is up). The missing-query 400 validation runs offline. The happy path

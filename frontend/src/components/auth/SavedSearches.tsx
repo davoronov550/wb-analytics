@@ -12,7 +12,7 @@ interface Props {
   onApply: (saved: SavedSearch) => void;
 }
 
-/** List and manage the user's saved searches (FE-09). */
+/** List and manage the user's saved searches. */
 export function SavedSearches({ filters, onApply }: Props) {
   const [items, setItems] = useState<SavedSearch[]>([]);
   const [name, setName] = useState("");

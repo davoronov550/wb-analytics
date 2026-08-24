@@ -1,4 +1,4 @@
-"""History read + retention use cases (FE-04)."""
+"""History read + retention use cases."""
 
 from __future__ import annotations
 

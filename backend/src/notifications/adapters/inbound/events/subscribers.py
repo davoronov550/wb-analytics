@@ -1,4 +1,4 @@
-"""Event subscribers (inbound adapter) — evaluate alerts on catalog events (FE-07).
+"""Event subscribers (inbound adapter) — evaluate alerts on catalog events.
 
 PriceChanged carries old/new sale price directly (enables pct_drop). ProductsCollected
 carries only ids, so current sale prices are read from the catalog to evaluate

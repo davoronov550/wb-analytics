@@ -2,13 +2,13 @@
 
 Wraps google-auth. The verification callable is injectable so the use case and
 HTTP layers can be tested offline with a fake, keeping tests deterministic
-(Constitution II).
+.
 """
 
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from collections.abc import Callable
 
 from accounts.application.dto import VerifiedIdentity
 

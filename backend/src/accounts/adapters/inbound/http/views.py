@@ -1,4 +1,4 @@
-"""Accounts HTTP views (inbound adapter) — auth + saved searches (FE-09)."""
+"""Accounts HTTP views (inbound adapter) — auth + saved searches."""
 
 from __future__ import annotations
 

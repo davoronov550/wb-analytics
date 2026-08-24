@@ -1,4 +1,4 @@
-"""Notifications HTTP views (inbound adapter) — owner-scoped alert CRUD (FE-07)."""
+"""Notifications HTTP views (inbound adapter) — owner-scoped alert CRUD."""
 
 from __future__ import annotations
 

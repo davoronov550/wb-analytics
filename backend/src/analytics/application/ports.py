@@ -35,7 +35,7 @@ class ProductReaderPort(Protocol):
 
 
 class StatsQueryPort(Protocol):
-    """Aggregate catalog products (DB-side) for a filtered set (FE-05).
+    """Aggregate catalog products (DB-side) for a filtered set.
 
     Reuses catalog's ProductFilter so /api/stats/ shares the exact filter semantics
     of /api/products/.

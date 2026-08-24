@@ -1,13 +1,12 @@
-"""Adapter test for the in-process event bus (Constitution IV seam).
+"""Adapter test for the in-process event bus (seam).
 
-RED first: `shared.adapters.event_bus.InProcessEventBus` is implemented in T011.
+RED first: `shared.adapters.event_bus.InProcessEventBus` is.
 Delivery is synchronous and by exact event type.
 """
 
 from datetime import UTC, datetime
 
 from shared.adapters.event_bus import InProcessEventBus
-
 from shared.events import PriceChanged, ProductsCollected
 
 

@@ -1,7 +1,7 @@
 """E2E Google sign-in (@django_db, deferred) — offline via a fake verifier.
 
 The HTTP + directory + JWT path is exercised end to end; only the Google network
-verification is replaced (Constitution II: deterministic, offline).
+verification is replaced ( deterministic, offline).
 """
 
 import pytest

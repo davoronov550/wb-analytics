@@ -39,7 +39,7 @@ class DjangoProductRepository:
         page_size: int,
     ) -> Page[Product]:
         qs = ProductModel.objects.select_related("source_query").all()
-        # Price bounds apply to sale price (what the buyer pays) — FR-007.
+        # Price bounds apply to sale price (what the buyer pays).
         if filter.min_price is not None:
             qs = qs.filter(sale_price__gte=filter.min_price)
         if filter.max_price is not None:

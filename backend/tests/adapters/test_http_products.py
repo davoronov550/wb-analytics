@@ -1,14 +1,14 @@
-"""HTTP request-parsing tests (T031) — query params → ProductFilter/Ordering.
+"""HTTP request-parsing tests — query params → ProductFilter/Ordering.
 
-RED before T037. Parsing/validation is pure (no DB); invalid input raises
-InvalidFilter, which the exception handler maps to 400 (FR-009, SC-005).
+ Parsing/validation is pure (no DB); invalid input raises
+InvalidFilter, which the exception handler maps to 400.
 """
 
 from decimal import Decimal
 
 import pytest
-from catalog.adapters.inbound.http.request_filters import parse_ordering, parse_product_filter
 
+from catalog.adapters.inbound.http.request_filters import parse_ordering, parse_product_filter
 from catalog.application.dto import Ordering
 from catalog.application.errors import InvalidFilter
 

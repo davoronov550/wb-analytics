@@ -1,4 +1,4 @@
-"""Celery tasks for the catalog context (background collection — FE-02).
+"""Celery tasks for the catalog context (background collection).
 
 The task is a thin driver over CollectProducts, updating the ParseJob status. It
 records failures on the job instead of re-raising, so the HTTP `POST /api/parse/`

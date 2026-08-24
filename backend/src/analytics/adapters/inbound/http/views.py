@@ -1,4 +1,4 @@
-"""Analytics HTTP views (inbound adapter) — price history (FE-04)."""
+"""Analytics HTTP views (inbound adapter) — price history."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ class StatsView(APIView):
     """GET /api/stats/ — aggregates for a filtered set; repeated `query=` compares.
 
     One query → a single Stats object. Two or more `query=` params → comparison
-    (FE-06): `{"items": [{"query", "stats"}, ...]}`, one per query, all sharing the
+    : `{"items": [{"query", "stats"}, ..]}`, one per query, all sharing the
     other filters.
     """
 
@@ -51,7 +51,7 @@ class StatsView(APIView):
 
 
 class ExportView(View):
-    """GET /api/export/?format=csv|xlsx — the filtered product set as a file (FE-08).
+    """GET /api/export/?format=csv|xlsx — the filtered product set as a file.
 
     A plain Django view (not DRF) so the ``format`` query param is a real parameter
     and not intercepted by DRF content negotiation.

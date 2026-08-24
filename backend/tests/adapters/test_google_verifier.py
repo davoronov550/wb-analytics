@@ -37,4 +37,5 @@ def test_returns_none_when_verification_raises():
 def test_returns_none_without_client_id_or_token():
     verifier = GoogleIdentityVerifier(client_id="", verify_fn=lambda _t: {"sub": "x"})
     assert verifier.verify("token") is None
-    assert GoogleIdentityVerifier(client_id="cid", verify_fn=lambda _t: {"sub": "x"}).verify("") is None
+    configured = GoogleIdentityVerifier(client_id="cid", verify_fn=lambda _t: {"sub": "x"})
+    assert configured.verify("") is None

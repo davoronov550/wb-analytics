@@ -1,4 +1,4 @@
-"""RecordSnapshots use case — append a price snapshot per product (FE-04).
+"""RecordSnapshots use case — append a price snapshot per product.
 
 Emits PriceChanged when a product's sale price differs from its previous snapshot,
 so the notifications context can react (the cross-context seam).

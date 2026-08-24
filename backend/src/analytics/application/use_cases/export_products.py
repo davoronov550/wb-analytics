@@ -1,4 +1,4 @@
-"""ExportProducts use case (FE-08) — the filtered product set as export rows.
+"""ExportProducts use case — the filtered product set as export rows.
 
 Reuses catalog's ListProducts so an export matches exactly what the table shows.
 The row shape is format-agnostic; CSV/XLSX serialization is an adapter concern.

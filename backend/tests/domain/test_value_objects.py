@@ -1,6 +1,6 @@
 """Domain unit tests for shared value objects (pure — no Django, no DB).
 
-RED first: `shared.domain.value_objects` is implemented in T008.
+RED first: `shared.domain.value_objects` is.
 
 Contract:
 - Constructors are STRICT (raise ValueError on invalid input) — domain purity.

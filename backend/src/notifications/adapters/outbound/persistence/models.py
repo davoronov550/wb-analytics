@@ -7,7 +7,7 @@ from django.db import models
 
 
 class AlertRuleModel(models.Model):
-    """A user's alert rule (FE-07)."""
+    """A user's alert rule."""
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="alert_rules"

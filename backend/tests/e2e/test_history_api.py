@@ -1,4 +1,4 @@
-"""E2E tests (T068) for price history — REQUIRE PostgreSQL (@django_db, deferred).
+"""E2E tests for price history — REQUIRE PostgreSQL (@django_db, deferred).
 
 Exercises the full event seam: a collection run publishes ProductsCollected, the
 analytics subscriber records a snapshot, and the history endpoint returns it.

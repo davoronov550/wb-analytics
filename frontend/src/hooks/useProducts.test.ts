@@ -1,6 +1,6 @@
 /**
- * T034 — useProducts: builds the API request from filters+sort and refetches
- * (debounced) on change (RED before T041).
+ * useProducts: builds the API request from filters+sort and refetches
+ * (debounced) on change.
  */
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";

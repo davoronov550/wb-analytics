@@ -5,7 +5,7 @@ and on a schedule), store their price history, and explore them through a
 filterable/sortable table, charts, aggregate stats, query comparison, price alerts,
 and CSV/XLSX export.
 
-Built spec-first (GitHub Spec Kit) with **hexagonal architecture (Ports & Adapters)**
+Built with **hexagonal architecture (Ports & Adapters)**
 as a **modular monolith of bounded contexts** designed to split into microservices.
 
 - **Backend:** Python 3.12 · Django 5 + DRF · Celery + Redis · PostgreSQL 16
@@ -110,7 +110,7 @@ cd ../frontend && npm test                          # Vitest + RTL
 
 ## Status
 
-All twelve user stories are implemented (core assignment + FE-01..FE-09):
+All twelve feature areas are implemented (core assignment + extensions):
 collect, table/filters/sort, charts, scheduled parsing, async collection, parser
 resilience, price history, extended analytics, query comparison, price alerts,
 export, and auth with saved searches.

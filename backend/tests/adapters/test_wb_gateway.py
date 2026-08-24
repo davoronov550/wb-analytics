@@ -1,6 +1,6 @@
-"""Gateway adapter test (T022) — offline via respx against a recorded fixture.
+"""Gateway adapter test — offline via respx against a recorded fixture.
 
-RED before T026. Verifies parsing (kopecks kept), pagination until an empty page,
+ Verifies parsing (kopecks kept), pagination until an empty page,
 and the max_pages bound. Never hits the live Wildberries service.
 """
 

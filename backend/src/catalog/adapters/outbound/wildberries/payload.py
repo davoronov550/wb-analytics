@@ -2,7 +2,7 @@
 
 All WB-format knowledge (field names, price fallbacks) lives here. Prices are kept
 as kopecks (the use case normalizes to rubles via Money.from_kopecks). Records
-without an id or name are skipped — the use case never sees them (FR-005).
+without an id or name are skipped — the use case never sees them.
 """
 
 from __future__ import annotations

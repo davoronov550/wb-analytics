@@ -1,4 +1,4 @@
-"""US5 async core (T054) — EnqueueCollection idempotency + CeleryTaskQueue.
+"""Async core — EnqueueCollection idempotency + CeleryTaskQueue.
 
 Offline: fake ParseJob repository and a fake Celery app (no broker, no DB).
 """

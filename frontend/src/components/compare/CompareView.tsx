@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import { getComparison, type QueryStats } from "../../api/compare";
 
-/** Compare two queries side by side (FE-06). */
+/** Compare two queries side by side. */
 export function CompareView() {
   const [first, setFirst] = useState("");
   const [second, setSecond] = useState("");

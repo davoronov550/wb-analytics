@@ -25,7 +25,7 @@ class TopProduct:
 
 @dataclass(frozen=True)
 class Stats:
-    """Aggregates over a filtered product set (FE-05)."""
+    """Aggregates over a filtered product set."""
 
     count: int
     avg_price: Decimal
@@ -38,7 +38,7 @@ class Stats:
 
 @dataclass(frozen=True)
 class QueryStats:
-    """Stats for one query, used in side-by-side comparison (FE-06)."""
+    """Stats for one query, used in side-by-side comparison."""
 
     query: str
     stats: Stats

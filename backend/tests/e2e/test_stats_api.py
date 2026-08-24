@@ -1,4 +1,4 @@
-"""E2E tests (T070) for GET /api/stats/ (FE-05).
+"""E2E tests for GET /api/stats/.
 
 Invalid-param 400 runs offline; aggregation correctness needs PostgreSQL
 (PERCENTILE_CONT median) — @django_db, deferred.

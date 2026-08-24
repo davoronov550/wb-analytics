@@ -1,4 +1,4 @@
-"""ManageSavedSearches use case — owner-scoped CRUD (FE-09)."""
+"""ManageSavedSearches use case — owner-scoped CRUD."""
 
 from __future__ import annotations
 

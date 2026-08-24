@@ -6,7 +6,7 @@ from django.db import models
 
 
 class SnapshotModel(models.Model):
-    """One price/rating snapshot for a product at a point in time (FE-04)."""
+    """One price/rating snapshot for a product at a point in time."""
 
     wb_id = models.BigIntegerField(db_index=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)

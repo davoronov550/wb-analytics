@@ -1,7 +1,7 @@
 import { buildExportUrl } from "../api/export";
 import type { Filters } from "../types";
 
-/** Download the current filtered set as CSV or XLSX (FE-08). */
+/** Download the current filtered set as CSV or XLSX. */
 export function ExportButtons({ filters }: { filters: Filters }) {
   return (
     <div className="export">

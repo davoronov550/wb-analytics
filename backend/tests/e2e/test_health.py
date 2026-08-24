@@ -1,4 +1,4 @@
-"""Health endpoint test (T095) — reports check structure (infra may be down)."""
+"""Health endpoint test — reports check structure (infra may be down)."""
 
 from rest_framework.test import APIClient
 

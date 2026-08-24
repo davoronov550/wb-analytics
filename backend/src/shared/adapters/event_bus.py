@@ -3,7 +3,7 @@
 The v1 cross-context seam: publishing an event invokes every handler subscribed
 to its exact type, synchronously, in registration order. Swapping this for a
 message-bus adapter (Kafka/Rabbit/Redis Streams) is the only change needed to
-split contexts into services (Constitution IV).
+split contexts into services.
 """
 
 from __future__ import annotations

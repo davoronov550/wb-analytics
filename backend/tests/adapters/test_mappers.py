@@ -1,4 +1,4 @@
-"""Mapper tests (T017) — pure ORM<->domain mapping, no DB access.
+"""Mapper tests — pure ORM<->domain mapping, no DB access.
 
 These construct model instances in memory (no .save / no query), so they run
 without a database.

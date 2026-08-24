@@ -1,8 +1,7 @@
 """Catalog inbound ports (what the application can do).
 
 Inbound adapters (HTTP views, CLI command, Celery task) depend on these
-interfaces; the use-case implementations live in ``application/use_cases`` (T027,
-T036).
+interfaces; the use-case implementations live in ``application/use_cases``.
 """
 
 from __future__ import annotations

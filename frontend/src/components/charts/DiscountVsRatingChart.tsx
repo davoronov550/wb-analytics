@@ -13,7 +13,7 @@ interface Point {
   discount: number;
 }
 
-/** Discount size (rubles) vs. product rating (FR-014). */
+/** Discount size (rubles) vs. product rating. */
 export function DiscountVsRatingChart({ products, width = 520, height = 280 }: Props) {
   const points: Point[] = products
     .map((p) => ({ rating: Number(p.rating), discount: Number(p.discount_abs) }))

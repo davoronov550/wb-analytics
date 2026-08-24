@@ -1,4 +1,4 @@
-"""Celery Beat task (inbound adapter) — periodically run due schedules (FE-01).
+"""Celery Beat task (inbound adapter) — periodically run due schedules.
 
 Beat is configured (config/celery.py) to call this on a fixed cadence; the use
 case decides which schedules are actually due.

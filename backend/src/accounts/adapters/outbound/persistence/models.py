@@ -7,7 +7,7 @@ from django.db import models
 
 
 class SavedSearchModel(models.Model):
-    """A user's saved query + filters (FE-09)."""
+    """A user's saved query + filters."""
 
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_searches"
@@ -25,7 +25,7 @@ class SavedSearchModel(models.Model):
 
 
 class ExternalIdentityModel(models.Model):
-    """A third-party identity (e.g. Google `sub`) linked to a local user (FE-09)."""
+    """A third-party identity (e.g. Google `sub`) linked to a local user."""
 
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="identities"

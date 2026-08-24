@@ -25,7 +25,7 @@ __all__ = [
     "ACTIVE_PARSE_STATUSES",
 ]
 
-# Fields the API may sort by (FR-008).
+# Fields the API may sort by.
 ORDERABLE_FIELDS = frozenset({"price", "sale_price", "rating", "reviews_count", "name"})
 
 
@@ -36,13 +36,13 @@ class ParseStatus:
     FAILED = "failed"
 
 
-# A query with an active job must not be enqueued again (idempotency, FR-022).
+# A query with an active job must not be enqueued again (idempotency).
 ACTIVE_PARSE_STATUSES = frozenset({ParseStatus.PENDING, ParseStatus.RUNNING})
 
 
 @dataclass(frozen=True)
 class ParseJob:
-    """Status of an asynchronous collection run (FE-02)."""
+    """Status of an asynchronous collection run."""
 
     task_id: str
     query: str

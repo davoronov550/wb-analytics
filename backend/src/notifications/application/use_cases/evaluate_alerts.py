@@ -1,9 +1,9 @@
-"""EvaluateAlerts use case (FE-07) — fire matching alert rules with cooldown.
+"""EvaluateAlerts use case — fire matching alert rules with cooldown.
 
 Triggered from an event subscriber for each product observation. For every active
 rule targeting the product (or its query) whose condition holds, records an
 AlertEvent and notifies — unless a matching event fired within the cooldown
-(dedup, FR-037).
+(dedup).
 """
 
 from __future__ import annotations

@@ -1,10 +1,8 @@
 """
-Django settings — framework glue only (Constitution III).
+Django settings — framework glue only.
 
 Business logic lives in the bounded-context packages under `src/`; this module
 just wires Django/DRF/CORS/Celery and registers each context's persistence app.
-Context apps and their URL includes are added incrementally as their model/view
-tasks land (see the task references below), so the project boots at every step.
 """
 
 import os
@@ -50,13 +48,13 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "corsheaders",
-    # --- bounded-context persistence apps: enable each as its model task lands ---
-    "catalog.adapters.outbound.persistence.apps.CatalogPersistenceConfig",  # T015 (+ ParseJob T057)
-    "catalog.adapters.inbound.cli.apps.CatalogCliConfig",  # T028 (management commands)
-    "analytics.adapters.outbound.persistence.apps.AnalyticsPersistenceConfig",  # T067
-    "scheduling.adapters.outbound.persistence.apps.SchedulingPersistenceConfig",  # T062
-    "notifications.adapters.outbound.persistence.apps.NotificationsPersistenceConfig",  # T084
-    "accounts.adapters.outbound.persistence.apps.AccountsPersistenceConfig",  # T075
+    # --- bounded-context persistence apps ---
+    "catalog.adapters.outbound.persistence.apps.CatalogPersistenceConfig",
+    "catalog.adapters.inbound.cli.apps.CatalogCliConfig",  # management commands
+    "analytics.adapters.outbound.persistence.apps.AnalyticsPersistenceConfig",
+    "scheduling.adapters.outbound.persistence.apps.SchedulingPersistenceConfig",
+    "notifications.adapters.outbound.persistence.apps.NotificationsPersistenceConfig",
+    "accounts.adapters.outbound.persistence.apps.AccountsPersistenceConfig",
 ]
 
 MIDDLEWARE = [
@@ -94,7 +92,7 @@ def _database_from_env() -> dict:
     """Build the default DB config from DATABASE_URL, or a local PG default.
 
     `manage.py check` does not open a connection, so the default keeps the
-    project bootable before the DB env is set (see .env.example, task T004).
+    project bootable before the DB env is set (see .env.example).
     """
     url = os.environ.get("DATABASE_URL")
     if not url:
@@ -139,7 +137,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # --- Django REST Framework (inbound HTTP adapter defaults) ---
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 1000,  # charts need the full filtered set; per-view cap in T038/T040
+    "PAGE_SIZE": 1000,  # charts need the full filtered set
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.OrderingFilter",
@@ -149,10 +147,10 @@ REST_FRAMEWORK = {
         "rest_framework.authentication.SessionAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",  # catalog reads are public (FR-044)
+        "rest_framework.permissions.AllowAny",  # catalog reads are public
     ],
-    "EXCEPTION_HANDLER": "catalog.adapters.inbound.http.exceptions.exception_handler",  # T020
-    # Rate limits for abuse-prone endpoints (scoped throttles opt in per view; T094).
+    "EXCEPTION_HANDLER": "catalog.adapters.inbound.http.exceptions.exception_handler",
+    # Rate limits for abuse-prone endpoints (scoped throttles opt in per view).
     "DEFAULT_THROTTLE_RATES": {
         "parse": os.environ.get("THROTTLE_PARSE", "30/min"),
         "auth": os.environ.get("THROTTLE_AUTH", "10/min"),
@@ -162,13 +160,11 @@ REST_FRAMEWORK = {
 # --- CORS (frontend dev origin) ---
 CORS_ALLOWED_ORIGINS = [
     o
-    for o in os.environ.get(
-        "CORS_ORIGIN", "http://localhost:5173,http://127.0.0.1:5173"
-    ).split(",")
+    for o in os.environ.get("CORS_ORIGIN", "http://localhost:5173,http://127.0.0.1:5173").split(",")
     if o
 ]
 
-# --- Celery (async + scheduled work; adapters in T056/T057/T063) ---
+# --- Celery (async + scheduled work) ---
 CELERY_BROKER_URL = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
 CELERY_TASK_ALWAYS_EAGER = (
@@ -177,7 +173,7 @@ CELERY_TASK_ALWAYS_EAGER = (
 )
 CELERY_TASK_STORE_EAGER_RESULT = True
 
-# --- Wildberries gateway (adapter reads these; T026/T052/T053) ---
+# --- Wildberries gateway (adapter reads these) ---
 WB_MAX_PAGES = int(os.environ.get("WB_MAX_PAGES", "10"))
 WB_DEST = os.environ.get("WB_DEST", "-1257786")
 WB_REQUEST_TIMEOUT = float(os.environ.get("WB_REQUEST_TIMEOUT", "10"))
@@ -186,10 +182,10 @@ WB_PROXIES = [p for p in os.environ.get("WB_PROXIES", "").split(",") if p]
 # --- Event bus wiring switch (in-process now, message-bus later; seam) ---
 EVENT_PUBLISHER = os.environ.get("EVENT_PUBLISHER", "inprocess")
 
-# --- Price-history retention (FE-04; T066) ---
+# --- Price-history retention ---
 SNAPSHOT_RETENTION_DAYS = int(os.environ.get("SNAPSHOT_RETENTION_DAYS", "90"))
 
-# --- Notifications (FE-07; T085) ---
+# --- Notifications ---
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 EMAIL_HOST = os.environ.get("SMTP_HOST", "")
 EMAIL_PORT = int(os.environ.get("SMTP_PORT", "587"))
@@ -202,7 +198,7 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_DEFAULT_CHAT_ID = os.environ.get("TELEGRAM_DEFAULT_CHAT_ID", "")
 ALERT_COOLDOWN_SECONDS = int(os.environ.get("ALERT_COOLDOWN_SECONDS", "21600"))
 
-# --- Auth / JWT (FE-09) ---
+# --- Auth / JWT ---
 # Google OAuth web client ID; required to verify "Continue with Google" ID tokens.
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 
@@ -212,7 +208,7 @@ SIMPLE_JWT = {
     "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY") or SECRET_KEY,
 }
 
-# --- Structured logging (Constitution VIII) ---
+# --- Structured logging ---
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

@@ -1,4 +1,4 @@
-"""ComputeStats use-case test (T070) — fake StatsQueryPort, no DB."""
+"""ComputeStats use-case test — fake StatsQueryPort, no DB."""
 
 from decimal import Decimal
 

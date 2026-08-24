@@ -1,4 +1,4 @@
-"""Gateway resilience tests (T051) — offline via respx. RED before T052/T053.
+"""Gateway resilience tests — offline via respx.
 
 Covers retry with backoff on 429/timeout, User-Agent rotation across attempts, and
 mapping of exhausted retries to UpstreamUnavailable. Backoff sleep is a no-op so

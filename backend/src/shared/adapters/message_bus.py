@@ -3,7 +3,7 @@
 Demonstrates the microservices seam: selecting it (EVENT_PUBLISHER=bus) swaps the
 in-process bus for one that would publish to an external broker — a change confined
 to this adapter + the composition switch, with zero edits to domain/application
-(Constitution IV). Here it logs each published event (as if enqueued) and still
+. Here it logs each published event (as if enqueued) and still
 delivers to any locally-registered subscribers so a single-process run stays
 functional.
 """

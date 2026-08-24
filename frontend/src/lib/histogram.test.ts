@@ -1,4 +1,4 @@
-/** T045 — equal-width price histogram (pure). RED before T047. */
+/** equal-width price histogram (pure). */
 import { describe, expect, test } from "vitest";
 
 import { buildPriceHistogram } from "./histogram";

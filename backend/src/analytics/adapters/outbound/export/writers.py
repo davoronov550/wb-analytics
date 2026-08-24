@@ -1,4 +1,4 @@
-"""CSV / XLSX writers for product export (FE-08).
+"""CSV / XLSX writers for product export.
 
 CSV is produced line-by-line (streamed via StreamingHttpResponse); XLSX is built
 with openpyxl in write-only mode. Both are pure given an iterable of row dicts.

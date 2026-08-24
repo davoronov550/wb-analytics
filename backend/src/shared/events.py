@@ -1,4 +1,4 @@
-"""Domain events — the cross-context integration seam (Constitution IV).
+"""Domain events — the cross-context integration seam.
 
 Events are immutable facts published after a successful operation. Contexts react
 to them through the event bus, so they stay decoupled and microservice-ready.

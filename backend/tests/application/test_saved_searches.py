@@ -1,4 +1,4 @@
-"""Saved-search use-case tests (T074) — owner isolation, fake repo, no DB."""
+"""Saved-search use-case tests — owner isolation, fake repo, no DB."""
 
 from accounts.application.dto import SavedSearch
 from accounts.application.use_cases.manage_saved_searches import ManageSavedSearches

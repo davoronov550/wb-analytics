@@ -1,4 +1,4 @@
-"""ComputeStats use case (FE-05) — aggregates for a filtered product set."""
+"""ComputeStats use case — aggregates for a filtered product set."""
 
 from __future__ import annotations
 

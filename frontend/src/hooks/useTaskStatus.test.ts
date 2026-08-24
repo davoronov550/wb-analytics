@@ -1,4 +1,4 @@
-/** T059 — useTaskStatus polls a parse task and stops on a terminal state. */
+/** useTaskStatus polls a parse task and stops on a terminal state. */
 import { renderHook, waitFor } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 

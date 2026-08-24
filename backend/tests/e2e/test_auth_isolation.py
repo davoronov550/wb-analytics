@@ -1,4 +1,4 @@
-"""E2E auth + saved-search isolation (T074) — requires DB (@django_db, deferred).
+"""E2E auth + saved-search isolation — requires DB (@django_db, deferred).
 
 Auth 401 for a protected endpoint runs offline.
 """

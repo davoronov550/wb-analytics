@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 
 @dataclass(frozen=True)
 class SavedSearch:
-    """A user's named search (query + filters), owner-scoped (FE-09)."""
+    """A user's named search (query + filters), owner-scoped."""
 
     id: int
     owner_id: int

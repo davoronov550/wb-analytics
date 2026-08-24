@@ -12,7 +12,7 @@ class AnalyticsPersistenceConfig(AppConfig):
     verbose_name = "Analytics"
 
     def ready(self) -> None:
-        # Wire the price-history recorder to the ProductsCollected event (FE-04).
+        # Wire the price-history recorder to the ProductsCollected event.
         from analytics.composition import container
 
         container.register_subscribers()

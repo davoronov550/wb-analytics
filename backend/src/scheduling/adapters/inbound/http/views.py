@@ -1,7 +1,7 @@
-"""Scheduling HTTP views (inbound adapter) — CRUD + enable/disable (FE-01).
+"""Scheduling HTTP views (inbound adapter) — CRUD + enable/disable.
 
-Owner-scoped (FE-09): schedules require authentication and each user only sees and
-mutates their own (foreign ids return 404, never leaking existence — SC-012).
+Owner-scoped: schedules require authentication and each user only sees and
+mutates their own (foreign ids return 404, never leaking existence).
 """
 
 from __future__ import annotations

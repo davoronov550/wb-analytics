@@ -1,4 +1,4 @@
-"""Domain tests for the catalog Product entity (pure). RED before T013."""
+"""Domain tests for the catalog Product entity (pure)."""
 
 from dataclasses import FrozenInstanceError
 from decimal import Decimal

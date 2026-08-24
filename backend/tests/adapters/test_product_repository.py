@@ -1,10 +1,10 @@
-"""Integration tests (T018) for DjangoProductRepository — REQUIRE PostgreSQL.
+"""Integration tests for DjangoProductRepository — REQUIRE PostgreSQL.
 
 Marked ``django_db``; run once a database is available:
     docker compose up -d db
     .venv/Scripts/python -m pytest tests/adapters/test_product_repository.py
 
-Covers upsert idempotency by wb_id and list filter/order/pagination (FR-004/07/08).
+Covers upsert idempotency by wb_id and list filter/order/pagination.
 """
 
 from decimal import Decimal

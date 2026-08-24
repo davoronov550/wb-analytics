@@ -1,7 +1,7 @@
-"""Microservices-seam test (T098) — EVENT_PUBLISHER selects the bus adapter.
+"""Microservices-seam test — EVENT_PUBLISHER selects the bus adapter.
 
 Selecting a bus adapter is confined to shared.composition + the adapter; no
-domain/application code changes (Constitution IV). Uses the pure factory so the
+domain/application code changes. Uses the pure factory so the
 process-wide singleton is not mutated.
 """
 

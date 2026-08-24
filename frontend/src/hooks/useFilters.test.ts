@@ -1,5 +1,5 @@
 /**
- * T033 — useFilters: filter/sort state synced to the URL (RED before T041).
+ * useFilters: filter/sort state synced to the URL.
  * Param names match the API contract (min_price, ordering=-field, …).
  */
 import { act, renderHook } from "@testing-library/react";

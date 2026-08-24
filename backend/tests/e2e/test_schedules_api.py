@@ -1,4 +1,4 @@
-"""E2E tests for /api/schedules/ (FE-01, owner-scoped per FE-09).
+"""E2E tests for /api/schedules/ (owner-scoped per).
 
 Auth 401 + validation 400 run offline (forced auth with an unsaved user reaches
 validation without touching the DB). CRUD + owner isolation need the DB (@django_db).

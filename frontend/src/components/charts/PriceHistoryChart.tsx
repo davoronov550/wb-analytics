@@ -10,7 +10,7 @@ interface Props {
   height?: number;
 }
 
-/** Sale-price time-series for one product (FE-04). */
+/** Sale-price time-series for one product. */
 export function PriceHistoryChart({ wbId, width = 520, height = 260 }: Props) {
   const [points, setPoints] = useState<PriceSnapshot[]>([]);
   const [error, setError] = useState<string | null>(null);

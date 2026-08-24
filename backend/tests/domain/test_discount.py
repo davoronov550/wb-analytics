@@ -1,4 +1,4 @@
-"""Domain tests for the discount policy (pure). RED before T013."""
+"""Domain tests for the discount policy (pure)."""
 
 from decimal import Decimal
 

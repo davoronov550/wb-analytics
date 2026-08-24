@@ -1,7 +1,7 @@
 """Catalog application errors.
 
 Adapters translate infrastructure failures into these; the HTTP exception handler
-(T020) maps them to responses (e.g. UpstreamUnavailable → 502).
+maps them to responses (e.g. UpstreamUnavailable → 502).
 """
 
 from __future__ import annotations

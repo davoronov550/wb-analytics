@@ -1,4 +1,4 @@
-"""Scheduling use-case tests (T060) — fakes, no DB, no Celery."""
+"""Scheduling use-case tests — fakes, no DB, no Celery."""
 
 from dataclasses import replace
 from datetime import UTC, datetime, timedelta

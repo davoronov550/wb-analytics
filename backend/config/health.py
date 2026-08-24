@@ -1,4 +1,4 @@
-"""Health check endpoint (observability — Constitution VIII).
+"""Health check endpoint (observability).
 
 Reports reachability of the database and Redis (short timeouts). 200 when all
 green, 503 when degraded, so orchestrators can gate traffic.

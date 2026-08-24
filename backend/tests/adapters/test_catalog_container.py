@@ -1,4 +1,4 @@
-"""Composition-root wiring tests (T021) — no DB needed (repo is only instantiated)."""
+"""Composition-root wiring tests — no DB needed (repo is only instantiated)."""
 
 from catalog.adapters.outbound.persistence.repository import DjangoProductRepository
 from catalog.application.use_cases.collect_products import CollectProducts

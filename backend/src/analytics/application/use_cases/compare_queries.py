@@ -1,4 +1,4 @@
-"""CompareQueries use case (FE-06) — stats per query, side by side.
+"""CompareQueries use case — stats per query, side by side.
 
 Reuses StatsQueryPort: for each query it aggregates with the base filter but the
 query overridden, so all other filters (price/rating/reviews) apply consistently.

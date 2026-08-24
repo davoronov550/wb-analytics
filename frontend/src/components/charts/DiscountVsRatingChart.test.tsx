@@ -1,4 +1,4 @@
-/** T046 — DiscountVsRatingChart renders a chart for products, empty state otherwise. */
+/** DiscountVsRatingChart renders a chart for products, empty state otherwise. */
 import { render, screen } from "@testing-library/react";
 import { expect, test } from "vitest";
 

@@ -2,7 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 
 import { type AlertRule, createAlert, deleteAlert, listAlerts } from "../../api/alerts";
 
-/** Manage price alerts (FE-07). Requires authentication. */
+/** Manage price alerts. Requires authentication. */
 export function AlertManager() {
   const [rules, setRules] = useState<AlertRule[]>([]);
   const [query, setQuery] = useState("");

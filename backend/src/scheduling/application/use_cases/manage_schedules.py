@@ -1,4 +1,4 @@
-"""ManageSchedules use case — CRUD over collection schedules (FE-01)."""
+"""ManageSchedules use case — CRUD over collection schedules."""
 
 from __future__ import annotations
 

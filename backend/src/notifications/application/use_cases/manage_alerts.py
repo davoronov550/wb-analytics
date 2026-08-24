@@ -1,4 +1,4 @@
-"""ManageAlerts use case — owner-scoped CRUD over alert rules (FE-07)."""
+"""ManageAlerts use case — owner-scoped CRUD over alert rules."""
 
 from __future__ import annotations
 

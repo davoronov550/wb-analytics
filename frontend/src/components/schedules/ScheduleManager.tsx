@@ -10,7 +10,7 @@ import type { Schedule } from "../../types";
 
 const SPEC_PRESETS = ["every 1h", "every 6h", "every 12h", "every 1d"];
 
-/** Manage periodic collection schedules (FE-01). */
+/** Manage periodic collection schedules. */
 export function ScheduleManager() {
   const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [query, setQuery] = useState("");

@@ -1,7 +1,7 @@
-"""EnqueueCollection use case — start an async collection run (FE-02).
+"""EnqueueCollection use case — start an async collection run.
 
 Idempotent per query: if a job for the query is already pending/running, returns
-it instead of enqueuing another (FR-022). Otherwise creates a pending job and
+it instead of enqueuing another. Otherwise creates a pending job and
 dispatches the background task via the queue port.
 """
 

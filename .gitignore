@@ -1,6 +1,3 @@
-# --- Claude / agent artifacts (excluded from the repo by request) ---
-.claude/
-
 # --- Python / Django ---
 __pycache__/
 *.py[cod]

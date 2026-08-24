@@ -1,4 +1,4 @@
-"""Alert use-case tests (T082) — fakes, no DB, no real notifier."""
+"""Alert use-case tests — fakes, no DB, no real notifier."""
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal

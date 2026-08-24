@@ -1,4 +1,4 @@
-"""E2E tests (T086) for /api/alerts/ (FE-07, owner-scoped).
+"""E2E tests for /api/alerts/ (owner-scoped).
 
 401 without auth runs offline; CRUD + owner isolation need the DB (@django_db).
 """

@@ -7,7 +7,7 @@ export interface QueryStats {
   stats: Stats;
 }
 
-/** Side-by-side stats for several queries (FE-06) — repeated `query=` param. */
+/** Side-by-side stats for several queries — repeated `query=` param. */
 export async function getComparison(queries: string[]): Promise<QueryStats[]> {
   const params = new URLSearchParams();
   queries.forEach((query) => params.append("query", query));

@@ -1,4 +1,4 @@
-"""ChannelNotifier tests (T085) — inject fake senders, no real IO."""
+"""ChannelNotifier tests — inject fake senders, no real IO."""
 
 from notifications.adapters.outbound.notifiers import ChannelNotifier
 from notifications.domain.alert import EMAIL

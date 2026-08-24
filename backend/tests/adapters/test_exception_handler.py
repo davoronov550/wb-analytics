@@ -1,4 +1,4 @@
-"""Tests for the DRF exception handler mapping (T020) — no DB needed."""
+"""Tests for the DRF exception handler mapping — no DB needed."""
 
 from catalog.adapters.inbound.http.exceptions import exception_handler
 from catalog.application.errors import InvalidFilter, UpstreamUnavailable

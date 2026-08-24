@@ -1,7 +1,7 @@
 """DRF exception handler (inbound HTTP adapter).
 
 Translates application/domain errors into safe HTTP responses without leaking
-internals (Constitution VI): UpstreamUnavailable → 502, InvalidFilter → 400.
+internals: UpstreamUnavailable → 502, InvalidFilter → 400.
 Anything else falls through to DRF's default handler (validation → 400, unknown →
 500 rendered by DRF).
 """

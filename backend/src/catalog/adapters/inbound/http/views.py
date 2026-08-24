@@ -49,7 +49,7 @@ class ProductListView(APIView):
 
 
 class ParseView(APIView):
-    """POST /api/parse/ — enqueue an async collection run (FE-02), returns 202."""
+    """POST /api/parse/ — enqueue an async collection run, returns 202."""
 
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "parse"
@@ -81,7 +81,7 @@ class ParseView(APIView):
 
 
 class TaskStatusView(APIView):
-    """GET /api/tasks/{task_id}/ — async collection status (FE-02)."""
+    """GET /api/tasks/{task_id}/ — async collection status."""
 
     def get(self, request: Request, task_id: str) -> Response:
         job = container.build_parse_job_repository().get(task_id)

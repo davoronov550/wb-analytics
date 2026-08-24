@@ -1,7 +1,7 @@
 """CollectProducts use case (application) — framework-free orchestration.
 
 Fetches raw products via the gateway, maps each to a domain Product (skipping any
-that can't form a valid one — FR-005), upserts them via the repository, publishes a
+that can't form a valid one), upserts them via the repository, publishes a
 ProductsCollected event, and returns a summary. Depends only on ports.
 """
 

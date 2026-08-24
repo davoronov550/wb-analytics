@@ -1,11 +1,11 @@
-"""E2E tests (T032) for GET /api/products/ — REQUIRE PostgreSQL + the view (T038).
+"""E2E tests for GET /api/products/ — REQUIRE PostgreSQL + the view.
 
 Marked ``django_db``; run once a database is available:
     docker compose up -d db
     .venv/Scripts/python -m pytest tests/e2e/test_products_api.py
 
 Covers filtering (price on sale_price, rating, reviews), ordering, discount fields
-in the payload, and 400 on invalid input (FR-007/08/09, SC-005).
+in the payload, and 400 on invalid input.
 """
 
 from decimal import Decimal

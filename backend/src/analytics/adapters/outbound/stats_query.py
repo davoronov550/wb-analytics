@@ -1,7 +1,7 @@
-"""DB-side statistics over catalog products (implements StatsQueryPort, FE-05).
+"""DB-side statistics over catalog products (implements StatsQueryPort).
 
 Aggregation runs in PostgreSQL (avg/stddev/count/discount share via ORM; median via
-PERCENTILE_CONT), so it stays fast on large sets (SC-010). Reuses catalog's
+PERCENTILE_CONT), so it stays fast on large sets. Reuses catalog's
 ProductFilter semantics (price bounds apply to sale_price).
 """
 

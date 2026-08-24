@@ -1,4 +1,4 @@
-"""RunDueSchedules use case — enqueue collection for every due schedule (FE-01).
+"""RunDueSchedules use case — enqueue collection for every due schedule.
 
 Invoked periodically by the Celery Beat adapter. Only active schedules whose
 interval has elapsed since their last run are enqueued; each is then marked ran.

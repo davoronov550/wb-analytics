@@ -7,7 +7,7 @@ interface Props {
   filters: Filters;
 }
 
-/** Aggregate stats for the current filtered set (FE-05). */
+/** Aggregate stats for the current filtered set. */
 export function StatsPanel({ filters }: Props) {
   const [stats, setStats] = useState<Stats | null>(null);
   const key = JSON.stringify(filters);

@@ -1,4 +1,4 @@
-"""Shared kernel outbound ports (Constitution III/IV).
+"""Shared kernel outbound ports.
 
 Ports are structural interfaces (``typing.Protocol``) so adapters implement them
 without importing this module. Concrete adapters live in ``shared/adapters`` and
@@ -40,7 +40,7 @@ class ClockPort(Protocol):
 
 
 class TaskQueuePort(Protocol):
-    """Enqueue background work off the request path (Constitution VII)."""
+    """Enqueue background work off the request path."""
 
     def enqueue(self, task_name: str, payload: dict[str, object]) -> str:
         """Schedule a named task with a JSON-serializable payload; return its id."""

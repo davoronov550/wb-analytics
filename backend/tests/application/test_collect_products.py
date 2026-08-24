@@ -1,15 +1,14 @@
-"""Use-case tests for CollectProducts (T023) — fake ports, no DB, no network.
+"""Use-case tests for CollectProducts — fake ports, no DB, no network.
 
-RED before T027. Verifies: RawProduct→domain mapping, per-item skip of records
+ Verifies: RawProduct→domain mapping, per-item skip of records
 that can't form a valid Product, idempotent counts from the repository, the
 ProductsCollected event, and max_pages resolution (command overrides default).
 """
 
 from datetime import UTC, datetime
 
-from catalog.application.use_cases.collect_products import CollectProducts
-
 from catalog.application.dto import CollectInput, RawProduct, UpsertResult
+from catalog.application.use_cases.collect_products import CollectProducts
 from shared.events import ProductsCollected
 
 TS = datetime(2026, 8, 8, 12, 0, tzinfo=UTC)

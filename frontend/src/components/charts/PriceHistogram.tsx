@@ -10,7 +10,7 @@ interface Props {
   height?: number;
 }
 
-/** Distribution of sale prices vs. product count (FR-013). */
+/** Distribution of sale prices vs. product count. */
 export function PriceHistogram({ products, bucketCount = 10, width = 520, height = 280 }: Props) {
   const prices = products.map((p) => Number(p.sale_price)).filter((n) => Number.isFinite(n));
   const buckets = buildPriceHistogram(prices, bucketCount);

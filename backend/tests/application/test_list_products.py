@@ -1,14 +1,13 @@
-"""Use-case tests for ListProducts (T030) — fake repository, no DB.
+"""Use-case tests for ListProducts — fake repository, no DB.
 
-RED before T036. Verifies domain Product → ProductView mapping (incl. discount
+ Verifies domain Product → ProductView mapping (incl. discount
 fields) and pass-through of filter/ordering/pagination to the repository.
 """
 
 from decimal import Decimal
 
-from catalog.application.use_cases.list_products import ListProducts
-
 from catalog.application.dto import Ordering, Page, ProductFilter, ProductView
+from catalog.application.use_cases.list_products import ListProducts
 from catalog.domain.product import Product
 from shared.domain.value_objects import Money, Rating, ReviewsCount
 

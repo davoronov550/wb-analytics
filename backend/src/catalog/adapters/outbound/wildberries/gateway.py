@@ -2,7 +2,7 @@
 
 Fetches the public catalog-search JSON page by page until an empty page or the
 max_pages bound, delegating field parsing to ``payload``. Resilient to WB rate
-limits/timeouts (US6): bounded retries with exponential backoff + jitter, rotating
+limits/timeouts: bounded retries with exponential backoff + jitter, rotating
 User-Agents and optional proxies. Exhausted retries surface as UpstreamUnavailable.
 """
 

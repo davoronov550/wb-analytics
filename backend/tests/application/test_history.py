@@ -1,4 +1,4 @@
-"""Analytics history use-case tests (T065) — fakes, no DB."""
+"""Analytics history use-case tests — fakes, no DB."""
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal

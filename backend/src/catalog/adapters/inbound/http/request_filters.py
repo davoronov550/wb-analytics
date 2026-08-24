@@ -3,7 +3,7 @@
 Framework filtering (django-filter/OrderingFilter) would live here too, but the
 mapping to the application's ProductFilter/Ordering is explicit so the use case
 stays framework-free. Invalid input raises InvalidFilter → 400 via the exception
-handler (FR-009, SC-005).
+handler.
 """
 
 from __future__ import annotations

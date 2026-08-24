@@ -1,4 +1,4 @@
-"""Unit tests for WB payload parsing (T025) — no network, no DB."""
+"""Unit tests for WB payload parsing — no network, no DB."""
 
 from catalog.adapters.outbound.wildberries.payload import parse_search_response
 

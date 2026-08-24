@@ -2,7 +2,7 @@
 
 Thin adapter: parse args into a CollectInput and delegate to the CollectProducts
 use case resolved from the composition root. Runs synchronously (the async path is
-POST /api/parse/ in US5).
+POST /api/parse/).
 """
 
 from __future__ import annotations

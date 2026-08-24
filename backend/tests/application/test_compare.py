@@ -1,4 +1,4 @@
-"""CompareQueries use-case test (T079) — fake StatsQueryPort, no DB."""
+"""CompareQueries use-case test — fake StatsQueryPort, no DB."""
 
 from decimal import Decimal
 
