@@ -1,15 +1,15 @@
 # WB Product Analytics
 
-A Wildberries market-monitoring service: collect products for a query (on demand
-and on a schedule), store their price history, and explore them through a
-filterable/sortable table, charts, aggregate stats, query comparison, price alerts,
-and CSV/XLSX export.
+Сервис мониторинга товаров Wildberries: собирает товары по запросу (по требованию
+и по расписанию), хранит историю их цен и даёт разобрать выборку через таблицу с
+фильтрами и сортировкой, графики, агрегаты, сравнение запросов, алерты по цене и
+экспорт в CSV/XLSX.
 
-Built with **hexagonal architecture (Ports & Adapters)**
-as a **modular monolith of bounded contexts** designed to split into microservices.
+Построен на **гексагональной архитектуре (Ports & Adapters)** как **модульный
+монолит из ограниченных контекстов**, рассчитанный на разделение в микросервисы.
 
-- **Backend:** Python 3.12 · Django 5 + DRF · Celery + Redis · PostgreSQL 16
-- **Frontend:** React 18 + TypeScript + Vite · TanStack Table · Recharts
+- **Бэкенд:** Python 3.12 · Django 5 + DRF · Celery + Redis · PostgreSQL 16
+- **Фронтенд:** React 18 + TypeScript + Vite · TanStack Table · Recharts
 
 ## Возможности
 
@@ -111,41 +111,42 @@ ID-токен проверяется на бэкенде, аккаунт соз�
 
 ![Профиль](docs/screenshots/14-settings.png)
 
-## Architecture
+## Архитектура
 
-Business logic lives in framework-free `domain/` + `application/` packages; Django,
-DRF, httpx, Celery, and openpyxl are confined to `adapters/`. Contexts integrate
-only through an **event bus** (`ProductsCollected`, `PriceChanged`) — never direct
-calls — which is the seam that lets each context become a service.
+Бизнес-логика живёт во фреймворко-независимых пакетах `domain/` и `application/`;
+Django, DRF, httpx, Celery и openpyxl заперты в `adapters/`. Контексты общаются
+только через **шину событий** (`ProductsCollected`, `PriceChanged`) — никаких
+прямых вызовов. Это тот шов, по которому каждый контекст можно вынести в сервис.
 
 ```
 backend/src/
-├── shared/           kernel: value objects, events, ports, event bus, clock, task queue
-├── catalog/          ingestion + product read (WB gateway, parse, list, async parse)
-├── analytics/        price history, stats, comparison, export (subscribes to events)
-├── scheduling/       periodic collection (Celery Beat → enqueue via catalog seam)
-├── notifications/    price alerts (subscribes to events → email/Telegram)
-└── accounts/         auth (JWT) + saved searches; owner-scoping for schedules/alerts
+├── shared/           ядро: value objects, события, порты, шина, часы, очередь задач
+├── catalog/          сбор и чтение товаров (шлюз WB, парсинг, список, async-сбор)
+├── analytics/        история цен, статистика, сравнение, экспорт (слушает события)
+├── scheduling/       периодический сбор (Celery Beat → постановка задач в catalog)
+├── notifications/    алерты по цене (слушает события → email/Telegram)
+└── accounts/         авторизация (JWT) и сохранённые запросы; владение расписаниями и алертами
 ```
 
-Each context has: `domain/` (pure) → `application/` (use cases + ports) →
-`adapters/{inbound,outbound}` → `composition/` (the single wiring root).
+Каждый контекст устроен одинаково: `domain/` (чистый) → `application/`
+(сценарии + порты) → `adapters/{inbound,outbound}` → `composition/` (единственный
+корень сборки зависимостей).
 
-**Event flow (in-process seam):** `catalog` publishes `ProductsCollected` →
-`analytics` records a price snapshot and emits `PriceChanged` → `notifications`
-evaluates alerts. Swap `EVENT_PUBLISHER=inprocess` → `bus` to route through a
-message broker instead — a change confined to `shared/composition.py` + the bus
-adapter, with zero domain/application edits.
+**Поток событий (внутрипроцессный шов):** `catalog` публикует `ProductsCollected`
+→ `analytics` сохраняет снимок цены и порождает `PriceChanged` → `notifications`
+проверяет правила алертов. Переключение `EVENT_PUBLISHER=inprocess` → `bus`
+уводит обмен в брокер сообщений: правка затрагивает только
+`shared/composition.py` и адаптер шины, домен и сценарии не меняются.
 
-## Quickstart
+## Быстрый старт
 
-Prerequisites: Python 3.12, Node 20, Docker (for PostgreSQL + Redis).
+Требуется: Python 3.12, Node 20, Docker (для PostgreSQL и Redis).
 
-### Backend
+### Бэкенд
 
 ```bash
 cd backend
-cp .env.example .env                 # adjust; never commit .env
+cp .env.example .env                 # поправьте под себя; .env не коммитится
 docker compose up -d                 # PostgreSQL 16 + Redis
 python -m venv .venv && . .venv/Scripts/activate   # *nix: bin/activate
 pip install -e ".[dev]"
@@ -153,21 +154,21 @@ python manage.py migrate
 python manage.py runserver           # http://localhost:8000
 ```
 
-Background workers (async collection, schedules, alerts):
+Фоновые обработчики (async-сбор, расписания, алерты):
 
 ```bash
-celery -A config worker -l info      # collection + alert tasks
-celery -A config beat   -l info      # due-schedule ticks (every 60s)
+celery -A config worker -l info      # задачи сбора и алертов
+celery -A config beat   -l info      # тики расписаний (раз в 60 с)
 ```
 
-Collect data (CLI, synchronous) or via the API (async):
+Собрать данные — через CLI (синхронно) или через API (асинхронно):
 
 ```bash
 python manage.py parse_wb "наушники"
 curl -X POST http://localhost:8000/api/parse/ -H "Content-Type: application/json" -d "{\"query\":\"наушники\"}"
 ```
 
-### Frontend
+### Фронтенд
 
 ```bash
 cd frontend
@@ -175,45 +176,65 @@ npm install
 npm run dev                          # http://localhost:5173
 ```
 
-`/` is the public landing page with sign-up / sign-in (password or Google);
-the workspace lives under `/app` and requires an account.
+`/` — публичная главная страница с регистрацией и входом (пароль или Google);
+рабочее пространство находится по адресу `/app` и требует аккаунта.
+
+### Вход через Google
+
+Создайте OAuth 2.0 Client ID (тип Web) в Google Cloud Console, добавьте
+`http://localhost:5173` в разрешённые JavaScript-источники и пропишите ключ:
+
+```bash
+# frontend/.env
+VITE_GOOGLE_CLIENT_ID=<ваш-client-id>.apps.googleusercontent.com
+# backend/.env
+GOOGLE_CLIENT_ID=<ваш-client-id>.apps.googleusercontent.com
+```
+
+Client secret не нужен: бэкенд проверяет ID-токен, выданный Google Identity
+Services. Без ключа вход по логину и паролю работает как обычно.
 
 ## API
 
-| Method & path | Purpose |
+| Метод и путь | Назначение |
 |---|---|
-| `GET /api/products/` | Filter (price/rating/reviews) + ordering + pagination |
-| `POST /api/parse/` | Enqueue async collection → `202 {task_id}` |
-| `GET /api/tasks/{id}/` | Async task status |
-| `GET /api/products/{wb_id}/history/` | Price time-series |
-| `GET /api/stats/` | Aggregates (avg/median/discount share/top); repeated `query=` compares |
-| `GET /api/export/?format=csv\|xlsx` | Download filtered set |
-| `GET/POST/PATCH/DELETE /api/schedules/` | Scheduled parsing (auth, owner-scoped) |
-| `GET/POST/DELETE /api/alerts/` | Price alerts (auth, owner-scoped) |
-| `POST /api/auth/…`, `GET/POST/DELETE /api/saved-searches/` | Auth + saved searches |
-| `GET /api/health/` | DB/Redis health (200 / 503) |
+| `GET /api/products/` | Фильтры (цена/рейтинг/отзывы) + сортировка + пагинация |
+| `POST /api/parse/` | Поставить async-сбор в очередь → `202 {task_id}` |
+| `GET /api/tasks/{id}/` | Статус асинхронной задачи |
+| `GET /api/products/{wb_id}/history/` | Временной ряд цены |
+| `GET /api/stats/` | Агрегаты (среднее/медиана/доля скидок/топ); повторный `query=` сравнивает запросы |
+| `GET /api/export/?format=csv\|xlsx` | Выгрузка отфильтрованной выборки |
+| `GET/POST/PATCH/DELETE /api/schedules/` | Расписания сбора (авторизация, только свои) |
+| `GET/POST/DELETE /api/alerts/` | Алерты по цене (авторизация, только свои) |
+| `POST /api/auth/…`, `GET/POST/DELETE /api/saved-searches/` | Авторизация и сохранённые запросы |
+| `GET /api/health/` | Состояние БД и Redis (200 / 503) |
 
-Catalog reads are public; user-owned resources require authentication.
+Чтение каталога публично; пользовательские ресурсы требуют авторизации.
 
-## Testing
+## Тестирование
 
-Tests are organized per hexagonal boundary (domain / application / adapters / e2e).
+Тесты разложены по границам гексагона (domain / application / adapters / e2e).
 
 ```bash
 cd backend
-.venv/Scripts/python -m pytest -m "not django_db"   # offline: domain, use cases, adapters
-.venv/Scripts/python -m pytest -m "django_db"       # integration/e2e (needs PostgreSQL)
+.venv/Scripts/python -m pytest -m "not django_db"   # офлайн: домен, сценарии, адаптеры
+.venv/Scripts/python -m pytest -m "django_db"       # интеграционные и e2e (нужен PostgreSQL)
+.venv/Scripts/python -m coverage run -m pytest && .venv/Scripts/python -m coverage report
 cd ../frontend && npm test                          # Vitest + RTL
 ```
 
-- **Offline (no infra): 127 tests pass, ~81% coverage** — the WB gateway runs
-  against a recorded fixture (respx), Celery runs eagerly, notifiers/queues are faked.
-- **24 `@django_db` tests** (repository, e2e endpoints) require a live PostgreSQL;
-  run them after `docker compose up -d db && python manage.py migrate`.
+- **Офлайн (без инфраструктуры): 137 тестов** — шлюз WB работает против записанной
+  фикстуры (respx), Celery выполняет задачи синхронно, нотификаторы и очереди
+  подменены заглушками.
+- **31 тест с `@django_db`** (репозиторий, e2e-эндпоинты) требует живого PostgreSQL:
+  запускайте после `docker compose up -d db && python manage.py migrate`.
+- Итого **168 тестов бэкенда, покрытие 94%** (порог в конфиге — 80%) и
+  **37 тестов фронтенда** (Vitest + Testing Library).
 
-## Status
+## Статус
 
-All twelve feature areas are implemented (core assignment + extensions):
-collect, table/filters/sort, charts, scheduled parsing, async collection, parser
-resilience, price history, extended analytics, query comparison, price alerts,
-export, and auth with saved searches.
+Реализованы все двенадцать функциональных блоков (основное задание и расширения):
+сбор данных, таблица с фильтрами и сортировкой, графики, сбор по расписанию,
+асинхронный сбор, устойчивость парсера, история цен, расширенная аналитика,
+сравнение запросов, алерты по цене, экспорт, а также авторизация с сохранёнными
+запросами.

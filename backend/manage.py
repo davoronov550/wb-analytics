@@ -19,7 +19,7 @@ def main() -> None:
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
             "Couldn't import Django. Activate the venv and run "
-            "`pip install -e .[dev]` (see quickstart.md)."
+            "`pip install -e .[dev]` (see README)."
         ) from exc
     execute_from_command_line(sys.argv)
 

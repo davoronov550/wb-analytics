@@ -37,7 +37,7 @@ dev = [
 
 # `src/` is the import root: each bounded context (shared, catalog, analytics,
 # scheduling, notifications, accounts) is a top-level package discovered here, so
-# `pip install -e .` puts them on the import path (see quickstart.md).
+# `pip install -e .` puts them on the import path (see README).
 [tool.setuptools.packages.find]
 where = ["src"]
 
