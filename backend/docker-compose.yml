@@ -11,7 +11,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -22,11 +22,13 @@ services:
 
   redis:
     image: redis:7
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    command:
+      ["redis-server", "--save", "", "--appendonly", "no",
+       "--requirepass", "${REDIS_PASSWORD:-devredis}"]
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devredis}", "ping"]
       interval: 5s
       timeout: 3s
       retries: 10

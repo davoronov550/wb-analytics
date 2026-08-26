@@ -116,9 +116,20 @@ def _database_from_env() -> dict:
 
 
 DATABASES = {"default": _database_from_env()}
+_db_options = DATABASES["default"].setdefault("OPTIONS", {})
 # Fail fast when the DB is unreachable (keeps `check`/`makemigrations` snappy
 # before PostgreSQL is up); real usage overrides via DATABASE_URL/pool settings.
-DATABASES["default"].setdefault("OPTIONS", {})["connect_timeout"] = 2
+_db_options["connect_timeout"] = 2
+# Encrypt the app↔PostgreSQL link. `disable` suits a local container; production
+# should set `verify-full` so the server certificate and hostname are checked.
+_db_options["sslmode"] = os.environ.get("DB_SSLMODE", "disable")
+
+# Reuse connections across requests instead of reconnecting every time (a new
+# TCP + auth handshake per request is pure overhead). CONN_HEALTH_CHECKS is the
+# required companion: without it Django can hand out a connection the server has
+# already dropped.
+DATABASES["default"]["CONN_MAX_AGE"] = int(os.environ.get("DB_CONN_MAX_AGE", "60"))
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
