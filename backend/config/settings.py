@@ -11,6 +11,8 @@ from datetime import timedelta
 from pathlib import Path
 from urllib.parse import urlparse
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent  # backend/
 SRC_DIR = BASE_DIR / "src"
 if str(SRC_DIR) not in sys.path:
@@ -240,6 +242,37 @@ SIMPLE_JWT = {
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
     "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY") or SECRET_KEY,
 }
+
+# --- HTTPS / cookie hardening ---
+# All driven by env so local development over plain HTTP keeps working, while a
+# production profile satisfies `manage.py check --deploy`.
+_SECURE_DEFAULT = "false" if DEBUG else "true"
+
+
+def _flag(name: str, default: str) -> bool:
+    return os.environ.get(name, default).lower() == "true"
+
+
+# Tell browsers to only ever reach this origin over HTTPS. Enable deliberately:
+# a wrong value is remembered by the browser for the whole max-age.
+SECURE_HSTS_SECONDS = int(os.environ.get("SECURE_HSTS_SECONDS", "0" if DEBUG else "31536000"))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = _flag("SECURE_HSTS_INCLUDE_SUBDOMAINS", _SECURE_DEFAULT)
+SECURE_HSTS_PRELOAD = _flag("SECURE_HSTS_PRELOAD", _SECURE_DEFAULT)
+SECURE_SSL_REDIRECT = _flag("SECURE_SSL_REDIRECT", _SECURE_DEFAULT)
+# Behind a TLS-terminating proxy Django must be told what the original scheme was.
+if os.environ.get("USE_X_FORWARDED_PROTO", "false").lower() == "true":
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+SESSION_COOKIE_SECURE = _flag("SESSION_COOKIE_SECURE", _SECURE_DEFAULT)
+CSRF_COOKIE_SECURE = _flag("CSRF_COOKIE_SECURE", _SECURE_DEFAULT)
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = False  # the SPA must read this token to send it back
+
+# Refuse to boot a production instance on the shipped placeholder key.
+if not DEBUG and SECRET_KEY == "dev-insecure-change-me":
+    raise ImproperlyConfigured(
+        "DJANGO_SECRET_KEY is still the development placeholder. "
+        "Generate a unique value before running with DEBUG=false."
+    )
 
 # --- Structured logging ---
 LOGGING = {

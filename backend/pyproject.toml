@@ -16,7 +16,9 @@ dependencies = [
     "django-filter>=24.2",
     "django-cors-headers>=4.4",
     "djangorestframework-simplejwt>=5.3",  # JWT auth
-    "psycopg[binary]>=3.2",                  # PostgreSQL driver
+    "psycopg[binary]>=3.2",
+    # Pinned above Django's floor: 0.5.5 carries 4 known CVEs (fixed in 0.6.0).
+    "sqlparse>=0.6.0",                  # PostgreSQL driver
     "httpx>=0.27",                           # WB gateway adapter
     "celery>=5.4",  # async + scheduled work
     "redis>=5.0",                            # Celery broker/result
