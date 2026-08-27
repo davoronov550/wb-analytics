@@ -1,5 +1,5 @@
 import type { Schedule } from "../types";
-import { authHeaders } from "./token";
+import { authedFetch } from "./client";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 const BASE = `${API_BASE}/api/schedules/`;
@@ -10,14 +10,14 @@ async function json<T>(response: Response): Promise<T> {
 }
 
 export async function listSchedules(): Promise<Schedule[]> {
-  return json(await fetch(BASE, { headers: authHeaders() }));
+  return json(await authedFetch(BASE));
 }
 
 export async function createSchedule(query: string, spec: string): Promise<Schedule> {
   return json(
-    await fetch(BASE, {
+    await authedFetch(BASE, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, spec }),
     }),
   );
@@ -25,15 +25,15 @@ export async function createSchedule(query: string, spec: string): Promise<Sched
 
 export async function setScheduleActive(id: number, active: boolean): Promise<Schedule> {
   return json(
-    await fetch(`${BASE}${id}/`, {
+    await authedFetch(`${BASE}${id}/`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", ...authHeaders() },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ active }),
     }),
   );
 }
 
 export async function deleteSchedule(id: number): Promise<void> {
-  const response = await fetch(`${BASE}${id}/`, { method: "DELETE", headers: authHeaders() });
+  const response = await authedFetch(`${BASE}${id}/`, { method: "DELETE" });
   if (!response.ok) throw new Error(`Delete schedule failed: ${response.status}`);
 }

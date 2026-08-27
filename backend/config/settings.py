@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_filters",
     "corsheaders",
+    "rest_framework_simplejwt.token_blacklist",  # makes refresh tokens revocable
     # --- bounded-context persistence apps ---
     "catalog.adapters.outbound.persistence.apps.CatalogPersistenceConfig",
     "catalog.adapters.inbound.cli.apps.CatalogCliConfig",  # management commands
@@ -243,8 +244,14 @@ ALERT_COOLDOWN_SECONDS = int(os.environ.get("ALERT_COOLDOWN_SECONDS", "21600"))
 GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    # Short-lived on purpose: a leaked access token cannot be revoked, so the
+    # window in which it is useful is kept small. The SPA refreshes silently.
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=int(os.environ.get("ACCESS_TOKEN_MINUTES", "30"))),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=int(os.environ.get("REFRESH_TOKEN_DAYS", "7"))),
+    # Every refresh hands back a new refresh token and blacklists the old one, so
+    # a captured refresh token is single-use and replaying it fails.
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
     "SIGNING_KEY": os.environ.get("JWT_SIGNING_KEY") or SECRET_KEY,
 }
 

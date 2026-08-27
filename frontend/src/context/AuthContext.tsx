@@ -7,7 +7,7 @@ import {
   logout as apiLogout,
   register as apiRegister,
 } from "../api/auth";
-import { getToken } from "../api/token";
+import { clearTokens, getToken } from "../api/token";
 import type { User } from "../types";
 
 interface AuthContextValue {
@@ -16,7 +16,7 @@ interface AuthContextValue {
   login: (username: string, password: string) => Promise<void>;
   register: (username: string, password: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (getToken()) {
       fetchMe()
         .then(setUser)
-        .catch(() => apiLogout())
+        .catch(() => clearTokens())
         .finally(() => setReady(true));
     } else {
       setReady(true);
@@ -54,8 +54,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         await apiLoginWithGoogle(idToken);
         setUser(await fetchMe());
       },
-      logout: () => {
-        apiLogout();
+      logout: async () => {
+        // Revokes the refresh token server-side before dropping local state.
+        await apiLogout();
         setUser(null);
       },
     };

@@ -1,5 +1,6 @@
 import type { User } from "../types";
-import { authHeaders, clearToken, setToken } from "./token";
+import { authedFetch } from "./client";
+import { clearTokens, getRefreshToken, setTokens } from "./token";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 
@@ -23,7 +24,7 @@ export async function login(username: string, password: string): Promise<void> {
   const response = await post("/api/auth/login/", { username, password });
   if (!response.ok) throw new Error("Неверный логин или пароль");
   const data = await response.json();
-  setToken(data.access);
+  setTokens(data.access, data.refresh);
 }
 
 /** Exchange a Google ID token (from Google Identity Services) for our JWT. */
@@ -34,17 +35,35 @@ export async function loginWithGoogle(idToken: string): Promise<void> {
     throw new Error(detail ?? "Не удалось войти через Google");
   }
   const data = await response.json();
-  setToken(data.access);
+  setTokens(data.access, data.refresh);
 }
 
 export async function fetchMe(): Promise<User> {
-  const response = await fetch(`${API_BASE}/api/auth/me/`, { headers: authHeaders() });
+  const response = await authedFetch(`${API_BASE}/api/auth/me/`);
   if (!response.ok) throw new Error("Не авторизован");
   return response.json();
 }
 
-export function logout(): void {
-  clearToken();
+/** End the session: revoke the refresh token server-side, then drop both tokens.
+ *
+ * The access token is stateless and just expires; the refresh token is what keeps
+ * the session alive, so revoking it is what actually ends it. Network failures are
+ * swallowed — the local session must be cleared either way.
+ */
+export async function logout(): Promise<void> {
+  const refresh = getRefreshToken();
+  if (refresh) {
+    try {
+      await authedFetch(`${API_BASE}/api/auth/logout/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh }),
+      });
+    } catch {
+      /* offline or already revoked — clearing locally is what matters */
+    }
+  }
+  clearTokens();
 }
 
 async function readError(response: Response): Promise<string | null> {

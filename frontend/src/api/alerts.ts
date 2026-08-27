@@ -1,4 +1,4 @@
-import { authHeaders } from "./token";
+import { authedFetch } from "./client";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 const BASE = `${API_BASE}/api/alerts/`;
@@ -20,15 +20,15 @@ export interface AlertInput {
 }
 
 export async function listAlerts(): Promise<AlertRule[]> {
-  const response = await fetch(BASE, { headers: authHeaders() });
+  const response = await authedFetch(BASE);
   if (!response.ok) throw new Error(`Alerts request failed: ${response.status}`);
   return response.json();
 }
 
 export async function createAlert(input: AlertInput): Promise<AlertRule> {
-  const response = await fetch(BASE, {
+  const response = await authedFetch(BASE, {
     method: "POST",
-    headers: { "Content-Type": "application/json", ...authHeaders() },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
   });
   if (!response.ok) throw new Error(`Create alert failed: ${response.status}`);
@@ -36,6 +36,6 @@ export async function createAlert(input: AlertInput): Promise<AlertRule> {
 }
 
 export async function deleteAlert(id: number): Promise<void> {
-  const response = await fetch(`${BASE}${id}/`, { method: "DELETE", headers: authHeaders() });
+  const response = await authedFetch(`${BASE}${id}/`, { method: "DELETE" });
   if (!response.ok) throw new Error(`Delete alert failed: ${response.status}`);
 }

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from django.contrib.auth import get_user_model
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
@@ -10,6 +12,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from accounts.adapters.inbound.http.serializers import RegisterSerializer, SavedSearchSerializer
@@ -95,10 +98,25 @@ class MeView(APIView):
 
 
 class LogoutView(APIView):
+    """Revoke the caller's refresh token.
+
+    The access token itself is stateless and simply expires (30 minutes), but the
+    refresh token is what keeps a session alive, so blacklisting it is what
+    actually ends the session. A client that no longer holds its refresh token
+    still gets a success: it has nothing left to revoke.
+    """
+
     permission_classes = [IsAuthenticated]
 
     def post(self, request: Request) -> Response:
-        # Stateless JWT: the client discards the token; nothing to do server-side.
+        raw = request.data.get("refresh") if isinstance(request.data, Mapping) else None
+        if raw:
+            try:
+                RefreshToken(raw).blacklist()
+            except TokenError:
+                # Already expired, already revoked, or malformed — the session is
+                # gone either way, so this is not an error for the caller.
+                pass
         return Response(status=status.HTTP_205_RESET_CONTENT)
 
 

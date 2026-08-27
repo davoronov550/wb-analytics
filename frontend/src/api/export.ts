@@ -1,5 +1,5 @@
 import type { Filters } from "../types";
-import { authHeaders } from "./token";
+import { authedFetch } from "./client";
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
 
@@ -21,7 +21,7 @@ export function buildExportUrl(filters: Filters, format: "csv" | "xlsx"): string
  * so the file is fetched with the auth header and saved from the resulting blob.
  */
 export async function downloadExport(filters: Filters, format: "csv" | "xlsx"): Promise<void> {
-  const response = await fetch(buildExportUrl(filters, format), { headers: authHeaders() });
+  const response = await authedFetch(buildExportUrl(filters, format));
   if (!response.ok) {
     throw new Error(
       response.status === 401
