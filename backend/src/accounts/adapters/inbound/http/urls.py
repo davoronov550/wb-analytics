@@ -1,6 +1,9 @@
 from django.urls import path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+from accounts.adapters.inbound.http.throttling import (
+    ThrottledTokenObtainPairView,
+    ThrottledTokenRefreshView,
+)
 from accounts.adapters.inbound.http.views import (
     GoogleAuthView,
     LogoutView,
@@ -12,9 +15,9 @@ from accounts.adapters.inbound.http.views import (
 
 urlpatterns = [
     path("auth/register/", RegisterView.as_view(), name="register"),
-    path("auth/login/", TokenObtainPairView.as_view(), name="login"),
+    path("auth/login/", ThrottledTokenObtainPairView.as_view(), name="login"),
     path("auth/google/", GoogleAuthView.as_view(), name="google-auth"),
-    path("auth/refresh/", TokenRefreshView.as_view(), name="token-refresh"),
+    path("auth/refresh/", ThrottledTokenRefreshView.as_view(), name="token-refresh"),
     path("auth/logout/", LogoutView.as_view(), name="logout"),
     path("auth/me/", MeView.as_view(), name="me"),
     path("saved-searches/", SavedSearchListView.as_view(), name="saved-search-list"),

@@ -25,6 +25,23 @@ COLUMNS: list[tuple[str, str]] = [
 ]
 
 
+# Excel and LibreOffice execute a cell whose text begins with one of these. Product
+# names come from Wildberries, so an attacker who can list an item under a crafted
+# name would otherwise get code execution in whoever opens the export.
+_FORMULA_TRIGGERS = ("=", "+", "-", "@", "\t", "\r")
+
+
+def _safe_cell(value):
+    """Neutralise spreadsheet formulas, leaving everything else untouched.
+
+    Prefixing with an apostrophe is the standard mitigation: spreadsheets read it
+    as "treat the rest as literal text" and do not display it as part of the value.
+    """
+    if isinstance(value, str) and value.startswith(_FORMULA_TRIGGERS):
+        return "'" + value
+    return value
+
+
 class _Echo:
     """A file-like object whose write() returns the value (for streaming csv)."""
 
@@ -36,7 +53,7 @@ def iter_csv(rows: Iterable[dict]) -> Iterator[str]:
     writer = csv.writer(_Echo())
     yield writer.writerow([header for _, header in COLUMNS])
     for row in rows:
-        yield writer.writerow([row.get(key) for key, _ in COLUMNS])
+        yield writer.writerow([_safe_cell(row.get(key)) for key, _ in COLUMNS])
 
 
 def build_xlsx(rows: Iterable[dict]) -> bytes:
@@ -44,7 +61,7 @@ def build_xlsx(rows: Iterable[dict]) -> bytes:
     sheet = workbook.create_sheet(title="products")
     sheet.append([header for _, header in COLUMNS])
     for row in rows:
-        sheet.append([row.get(key) for key, _ in COLUMNS])
+        sheet.append([_safe_cell(row.get(key)) for key, _ in COLUMNS])
     buffer = BytesIO()
     workbook.save(buffer)
     return buffer.getvalue()
