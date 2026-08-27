@@ -11,6 +11,7 @@ from decimal import Decimal
 
 import pytest
 
+from catalog.adapters.outbound.persistence.mappers import to_defaults
 from catalog.adapters.outbound.persistence.repository import DjangoProductRepository
 from catalog.application.dto import Ordering, ProductFilter
 from catalog.domain.product import Product
@@ -44,6 +45,93 @@ class TestUpsert:
         page = repo.list(ProductFilter(), Ordering(field="price"), 1, 100)
         assert page.count == 1
         assert page.items[0].sale_price == Money(Decimal("60.00"))
+
+    def test_mixed_batch_splits_created_and_updated(self):
+        """A real collection is mostly re-seen products with a few new ones.
+
+        The created/updated split is not cosmetic: it feeds the CLI summary,
+        ParseJob.mark_done() and GET /api/tasks/{id}/, so a bulk upsert must
+        keep reporting it exactly.
+        """
+        repo = DjangoProductRepository()
+        repo.upsert_many(
+            [_p(1, "100", "80", "4.5", 10), _p(2, "200", "150", "4.0", 20)], "наушники"
+        )
+
+        result = repo.upsert_many(
+            [
+                _p(1, "110", "90", "4.6", 11),  # existing
+                _p(2, "210", "160", "4.1", 21),  # existing
+                _p(3, "300", "250", "4.7", 30),  # new
+                _p(4, "400", "350", "4.8", 40),  # new
+            ],
+            "наушники",
+        )
+
+        assert (result.created, result.updated) == (2, 2)
+        page = repo.list(ProductFilter(), Ordering(field="price"), 1, 100)
+        assert page.count == 4
+
+    def test_updates_overwrite_every_mutable_column(self):
+        repo = DjangoProductRepository()
+        repo.upsert_many([_p(1, "100", "80", "4.5", 10, "old name")], "наушники")
+        repo.upsert_many([_p(1, "999", "555", "3.1", 77, "new name")], "наушники")
+
+        page = repo.list(ProductFilter(), Ordering(field="price"), 1, 100)
+        item = page.items[0]
+        assert item.name == "new name"
+        assert item.price == Money(Decimal("999.00"))
+        assert item.sale_price == Money(Decimal("555.00"))
+        assert item.rating == Rating(Decimal("3.1"))
+        assert item.reviews_count == ReviewsCount(77)
+
+    def test_upsert_is_batched_not_one_query_per_product(self):
+        """Guards the fix: the old loop issued ~2 queries per product."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        repo = DjangoProductRepository()
+        products = [_p(i, "100", "80", "4.5", 10) for i in range(1, 31)]
+
+        with CaptureQueriesContext(connection) as ctx:
+            repo.upsert_many(products, "наушники")
+
+        assert len(ctx) < 15, f"30 products should not need {len(ctx)} queries"
+
+    def test_failure_midway_leaves_no_partial_write(self):
+        """The whole batch commits or none of it does.
+
+        The failure is injected *after* some rows would already be mapped, so a
+        non-transactional implementation would leave half the batch behind.
+        """
+        from unittest.mock import patch
+
+        repo = DjangoProductRepository()
+        repo.upsert_many([_p(1, "100", "80", "4.5", 10)], "наушники")
+
+        calls = {"n": 0}
+        real = to_defaults
+
+        def explode_on_third(product):
+            calls["n"] += 1
+            if calls["n"] == 3:
+                raise RuntimeError("boom")
+            return real(product)
+
+        target = "catalog.adapters.outbound.persistence.repository.to_defaults"
+        with patch(target, side_effect=explode_on_third):
+            with pytest.raises(RuntimeError):
+                repo.upsert_many(
+                    [
+                        _p(2, "200", "150", "4.0", 20),
+                        _p(3, "300", "250", "4.1", 30),
+                        _p(4, "400", "350", "4.2", 40),
+                    ],
+                    "наушники",
+                )
+
+        page = repo.list(ProductFilter(), Ordering(field="price"), 1, 100)
+        assert [p.wb_id for p in page.items] == [1], "the failed batch must not persist"
 
 
 class TestList:
