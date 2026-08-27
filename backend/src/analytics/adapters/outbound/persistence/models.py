@@ -8,7 +8,9 @@ from django.db import models
 class SnapshotModel(models.Model):
     """One price/rating snapshot for a product at a point in time."""
 
-    wb_id = models.BigIntegerField(db_index=True)
+    # No db_index here: wb_id is the leading column of the composite index below,
+    # which already serves lookups by wb_id alone.
+    wb_id = models.BigIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     sale_price = models.DecimalField(max_digits=10, decimal_places=2)
     rating = models.DecimalField(max_digits=2, decimal_places=1, default=0)

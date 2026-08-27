@@ -59,7 +59,9 @@ class ParseJobModel(models.Model):
     """Status of an asynchronous collection run."""
 
     task_id = models.CharField(primary_key=True, max_length=64)
-    query = models.CharField(max_length=200, db_index=True)
+    # No db_index on `query`: it leads the composite index below. `status` keeps
+    # its own index — it is filtered without `query` when sweeping stale jobs.
+    query = models.CharField(max_length=200)
     status = models.CharField(max_length=16, default="pending", db_index=True)
     created = models.PositiveIntegerField(default=0)
     updated = models.PositiveIntegerField(default=0)
