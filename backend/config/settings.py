@@ -68,6 +68,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "config.security_headers.ContentSecurityPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -163,10 +164,14 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",  # catalog reads are public
     ],
     "EXCEPTION_HANDLER": "catalog.adapters.inbound.http.exceptions.exception_handler",
+    # `?format=` is a real parameter of /api/export/ (csv|xlsx), not a DRF renderer
+    # suffix. Format suffixes are not used anywhere in this project.
+    "URL_FORMAT_OVERRIDE": None,
     # Rate limits for abuse-prone endpoints (scoped throttles opt in per view).
     "DEFAULT_THROTTLE_RATES": {
         "parse": os.environ.get("THROTTLE_PARSE", "30/min"),
         "auth": os.environ.get("THROTTLE_AUTH", "10/min"),
+        "export": os.environ.get("THROTTLE_EXPORT", "10/min"),
     },
 }
 
@@ -273,6 +278,28 @@ if not DEBUG and SECRET_KEY == "dev-insecure-change-me":
         "DJANGO_SECRET_KEY is still the development placeholder. "
         "Generate a unique value before running with DEBUG=false."
     )
+
+# --- Content Security Policy ---
+# Applies to everything Django serves — the JSON API and, more importantly, the
+# HTML admin. The SPA is served separately (Vite in dev, a static host in prod),
+# so its own CSP is set there; see the README.
+#
+# `accounts.google.com` is required by Google Identity Services: it serves the
+# sign-in script and renders the account chooser in an iframe.
+CSP_POLICY = os.environ.get(
+    "CSP_POLICY",
+    "default-src 'self'; "
+    "script-src 'self' https://accounts.google.com; "
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+    "font-src 'self' https://fonts.gstatic.com; "
+    "img-src 'self' data:; "
+    "connect-src 'self' https://accounts.google.com; "
+    "frame-src https://accounts.google.com; "
+    "object-src 'none'; "
+    "base-uri 'self'; "
+    "form-action 'self'; "
+    "frame-ancestors 'none'",
+)
 
 # --- Structured logging ---
 LOGGING = {

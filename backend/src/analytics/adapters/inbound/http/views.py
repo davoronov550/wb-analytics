@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
-from django.views import View
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from analytics.adapters.inbound.http.serializers import SnapshotSerializer, StatsSerializer
@@ -50,22 +51,30 @@ class StatsView(APIView):
         return Response(StatsSerializer(stats).data)
 
 
-class ExportView(View):
+class ExportView(APIView):
     """GET /api/export/?format=csv|xlsx — the filtered product set as a file.
 
-    A plain Django view (not DRF) so the ``format`` query param is a real parameter
-    and not intercepted by DRF content negotiation.
+    Authenticated-only: this dumps the whole filtered catalogue in one request, so
+    it is an internal tool rather than part of the public catalogue read surface.
+    Throttled for the same reason.
+
+    ``format`` stays a plain query parameter because DRF's renderer-suffix lookup
+    is disabled project-wide (``URL_FORMAT_OVERRIDE = None``).
     """
 
-    def get(self, request) -> HttpResponse:
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [ScopedRateThrottle]
+    throttle_scope = "export"
+
+    def get(self, request: Request) -> HttpResponse:
         try:
-            product_filter = parse_product_filter(request.GET)
-            ordering = parse_ordering(request.GET)
+            product_filter = parse_product_filter(request.query_params)
+            ordering = parse_ordering(request.query_params)
         except InvalidFilter as exc:
             return JsonResponse({"detail": str(exc)}, status=400)
         rows = container.build_export_products().execute(product_filter, ordering)
 
-        if request.GET.get("format") == "xlsx":
+        if request.query_params.get("format") == "xlsx":
             response = HttpResponse(build_xlsx(rows), content_type=_XLSX_TYPE)
             response["Content-Disposition"] = 'attachment; filename="products.xlsx"'
             return response
