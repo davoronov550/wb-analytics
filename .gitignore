@@ -28,3 +28,6 @@ Thumbs.db
 backend/celerybeat-schedule*
 .coverage
 htmlcov/
+
+# Knowledge-graph build artifacts (graphify)
+graphify-out/
