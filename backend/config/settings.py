@@ -184,6 +184,28 @@ CELERY_TASK_ALWAYS_EAGER = (
 )
 CELERY_TASK_STORE_EAGER_RESULT = True
 
+# --- Caching ---
+# Redis in normal runs; in-memory under pytest so the suite needs no broker.
+_TESTING = "pytest" in sys.modules
+CACHES = {
+    "default": {
+        "BACKEND": (
+            "django.core.cache.backends.locmem.LocMemCache"
+            if _TESTING
+            else "django.core.cache.backends.redis.RedisCache"
+        ),
+        "LOCATION": (
+            "wb-analytics-locmem"
+            if _TESTING
+            else os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+        ),
+    }
+}
+# Aggregating the whole filtered set (avg/median/stddev) is the most expensive read
+# in the app and /api/stats/ is public, so the result is cached. Seconds; 0 disables
+# caching entirely (the default under pytest, so tests exercise the real query).
+STATS_CACHE_TTL = int(os.environ.get("STATS_CACHE_TTL", "0" if _TESTING else "120"))
+
 # --- Wildberries gateway (adapter reads these) ---
 WB_MAX_PAGES = int(os.environ.get("WB_MAX_PAGES", "10"))
 WB_DEST = os.environ.get("WB_DEST", "-1257786")

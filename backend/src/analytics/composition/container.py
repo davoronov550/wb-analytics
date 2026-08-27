@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from analytics.adapters.outbound.cached_stats_query import (
+    CachedStatsQuery,
+    invalidate_stats_cache,
+)
 from analytics.adapters.outbound.catalog_reader import CatalogProductReader
 from analytics.adapters.outbound.persistence.repository import DjangoSnapshotRepository
 from analytics.adapters.outbound.stats_query import DjangoStatsQuery
@@ -42,7 +46,15 @@ def build_apply_retention() -> ApplyRetention:
 
 
 def build_stats_query() -> StatsQueryPort:
-    return DjangoStatsQuery()
+    """Bare DB query, wrapped in the cache when STATS_CACHE_TTL is configured."""
+    from django.conf import settings
+    from django.core.cache import caches
+
+    inner = DjangoStatsQuery()
+    ttl = getattr(settings, "STATS_CACHE_TTL", 0)
+    if not ttl:
+        return inner
+    return CachedStatsQuery(inner=inner, cache=caches["default"], ttl=ttl)
 
 
 def build_compute_stats() -> ComputeStats:
@@ -60,9 +72,15 @@ def build_export_products() -> ExportProducts:
 
 
 def _on_products_collected(event: ProductsCollected) -> None:
+    from django.core.cache import caches
+
     items = build_product_reader().snapshot_inputs(list(event.wb_ids))
     if items:
         build_record_snapshots().execute(items)
+    # The product set just changed, so every cached aggregate is stale. Driven by
+    # the event rather than TTL alone, so /api/stats/ never serves pre-collection
+    # numbers after a parse run.
+    invalidate_stats_cache(caches["default"])
 
 
 def register_subscribers() -> None:
