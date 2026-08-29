@@ -31,3 +31,16 @@ htmlcov/
 
 # Knowledge-graph build artifacts (graphify)
 graphify-out/
+
+# --- Монорепозиторий миграции (uv workspace) ---
+# Лок-файл коммитится: воспроизводимость сборки важнее чистоты диффа.
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+coverage.xml
+
+# Стабы, сгенерированные `buf generate` из contracts/*.proto — артефакт сборки.
+libs/grpc_stubs/
+
+# Локальная конфигурация dev-окружения (шаблон — deploy/compose/.env.example).
+deploy/compose/.env

@@ -1,0 +1,82 @@
+# Корень uv-workspace монорепозитория.
+#
+# Сам по себе пакетом не является (`package = false`) — только держит общий
+# лок-файл, набор dev-зависимостей и конфигурацию инструментов качества для
+# всех участников: libs/* и services/*.
+#
+# Django-бэкенд в backend/ намеренно НЕ входит в workspace: он живёт на
+# Python 3.12 и своём наборе зависимостей до вывода из контура в фазе 5
+# (см. docs/migration/07-implementation-plan.md, §7.2).
+
+[project]
+name = "wb-analytics"
+version = "0.1.0"
+description = "WB Analytics — микросервисная платформа аналитики товаров маркетплейсов"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = ["libs/*", "services/*"]
+
+# Общие зависимости разработки. Устанавливаются на весь workspace одной
+# командой `uv sync`, поэтому версии инструментов не разъезжаются по сервисам.
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "pytest-cov>=6.0",
+    "ruff>=0.9",
+    "mypy>=1.14",
+    "testcontainers>=4.9",
+]
+
+# --- Типизация ---
+# Конфигурация живёт здесь, а не в mypy.ini: на Windows mypy читает .ini
+# в кодировке ANSI и падает с UnicodeDecodeError на кириллических
+# комментариях. TOML всегда UTF-8.
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+show_error_codes = true
+pretty = true
+# `services` добавляется сюда вместе с первым сервисом (T100): mypy падает
+# на каталоге без единого .py, а не пропускает его.
+files = ["libs"]
+exclude = ["^backend/", "^frontend/", "^libs/grpc_stubs/", "/alembic/versions/"]
+
+[[tool.mypy.overrides]]
+# Стабы, сгенерированные buf, вручную не типизируются.
+module = "wb_platform.grpc_stubs.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+# Библиотеки без аннотаций. Список намеренно короткий: каждая строка здесь —
+# осознанная уступка, а не способ заглушить ошибку.
+module = ["testcontainers.*", "clickhouse_connect.*"]
+ignore_missing_imports = true
+
+# --- Тесты ---
+[tool.pytest.ini_options]
+asyncio_mode = "strict"
+addopts = "--strict-markers"
+# backend/ исключён: у доживающего Django свой pytest-конфиг и свой
+# DJANGO_SETTINGS_MODULE, собирать его отсюда нельзя.
+testpaths = ["libs", "services"]
+markers = [
+    # Требуют поднятой инфраструктуры (testcontainers). Офлайн-прогон:
+    #   uv run pytest -m "not integration"
+    "integration: тест требует реальной инфраструктуры (PostgreSQL/Kafka/ClickHouse/Redis)",
+]
+
+# --- Покрытие ---
+[tool.coverage.run]
+branch = true
+omit = ["*/tests/*", "*/alembic/*", "*/__init__.py"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

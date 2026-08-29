@@ -1,0 +1,43 @@
+# wb-platform — общее ядро всех девяти сервисов.
+#
+# Правило: если код появился во втором сервисе копипастой — он принадлежит
+# сюда. Это единственная защита от дублирования инфраструктурного кода при
+# девяти отдельных деплой-юнитах (митигация риска R5).
+#
+# Состав модулей: docs/migration/07-implementation-plan.md, §7.3.
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wb-platform"
+version = "0.1.0"
+description = "Общее ядро сервисов WB Analytics: конфиг, логи, трассировка, ошибки, пагинация, outbox"
+requires-python = ">=3.13"
+dependencies = [
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "structlog>=24.4",
+    "orjson>=3.10",
+]
+
+[project.optional-dependencies]
+# Ставятся тем сервисом, которому нужны. Ядро не тянет за собой всё сразу:
+# api-gateway не нужен ClickHouse, timeseries не нужен gRPC-сервер.
+db = ["sqlalchemy[asyncio]>=2.0", "asyncpg>=0.30", "alembic>=1.14"]
+kafka = ["aiokafka>=0.12"]
+grpc = ["grpcio>=1.68", "grpcio-status>=1.68", "protobuf>=5.29"]
+redis = ["redis>=5.2"]
+http = ["aiohttp>=3.11", "tenacity>=9.0", "aiolimiter>=1.2"]
+web = ["fastapi>=0.115", "uvicorn[standard]>=0.34", "dishka>=1.4"]
+otel = [
+    "opentelemetry-sdk>=1.29",
+    "opentelemetry-exporter-otlp>=1.29",
+    "opentelemetry-instrumentation-fastapi>=0.50b0",
+    "opentelemetry-instrumentation-sqlalchemy>=0.50b0",
+    "opentelemetry-instrumentation-aiohttp-client>=0.50b0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/wb_platform"]

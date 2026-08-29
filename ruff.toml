@@ -1,0 +1,44 @@
+# Общая конфигурация ruff для libs/* и services/*.
+#
+# backend/ исключён: у него своя секция [tool.ruff] в backend/pyproject.toml,
+# и трогать доживающий Django ради единообразия смысла нет.
+
+line-length = 100
+target-version = "py313"
+src = ["libs", "services"]
+extend-exclude = ["backend", "frontend", "libs/grpc_stubs"]
+
+[lint]
+select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "ASYNC",# правила асинхронного кода — критичны, весь стек async
+    "S",    # bandit: небезопасные конструкции
+    "T20",  # print/pprint не должны доезжать до продакшена
+    "RUF",
+]
+ignore = [
+    "S101",  # assert — нормален в тестах, а вне тестов ловится ревью
+    # RUF001-003 ругаются на кириллицу как на «неоднозначные» символы. В
+    # продукте есть легитимные русские строки: поисковые запросы к Wildberries
+    # в тестах, тексты уведомлений. Код и docstring'и при этом пишутся
+    # по-английски — как в существующем backend/src.
+    "RUF001",
+    "RUF002",
+    "RUF003",
+]
+
+[lint.per-file-ignores]
+"**/tests/**" = ["S", "T20"]
+"**/alembic/versions/*" = ["E501"]
+
+[lint.isort]
+# `platform` — модуль стандартной библиотеки, поэтому пакет называется
+# wb_platform, а дистрибутив — wb-platform.
+known-first-party = ["wb_platform"]
+
+[format]
+quote-style = "double"
