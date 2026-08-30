@@ -34,6 +34,9 @@ ignore = [
 [lint.per-file-ignores]
 "**/tests/**" = ["S", "T20"]
 "**/alembic/versions/*" = ["E501"]
+# Утилиты командной строки: вывод в stdout/stderr — их интерфейс, а не
+# забытая отладка. В libs/ и services/ правило T20 продолжает действовать.
+"tools/*.py" = ["T20"]
 
 [lint.isort]
 # `platform` — модуль стандартной библиотеки, поэтому пакет называется
