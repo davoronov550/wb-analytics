@@ -1,0 +1,174 @@
+# Dev-инфраструктура монорепозитория миграции.
+#
+#   docker compose -f deploy/compose/docker-compose.yml up -d
+#
+# ВАЖНО про порты. Существующий backend/docker-compose.yml занимает 5432 и
+# 6379. До вывода Django из контура (фаза 5) оба окружения работают
+# одновременно, поэтому здесь host-порты намеренно смещены. Внутри сети
+# контейнеры общаются по стандартным портам.
+#
+# Все порты привязаны к 127.0.0.1 — снаружи машины инфраструктура недоступна.
+# Пароли в .env.example — локальные заглушки; в проде секреты приходят из Vault.
+
+name: wb-analytics-dev
+
+services:
+  # ---------------------------------------------------------------- PostgreSQL
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: postgres
+      # Роль приложения и шесть баз создаёт init-скрипт.
+      APP_DB_USER: ${APP_DB_USER:-wb_app}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-wbapp}
+    ports:
+      - "127.0.0.1:${POSTGRES_PORT:-15432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Отрабатывает один раз, только на чистом томе.
+      - ./init/postgres:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # ---------------------------------------------------------- Kafka 4.x (KRaft)
+  # Один контейнер в совмещённом режиме broker+controller. Так можно только в
+  # dev: в проде контроллеры выносятся отдельными подами, кворум из трёх
+  # (docs/migration/04-tech-stack.md, §4.3).
+  kafka:
+    image: apache/kafka:${KAFKA_VERSION:-4.0.0}
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Два клиентских листенера: PLAINTEXT для контейнеров, PLAINTEXT_HOST
+      # для процессов на хосте (тесты, локальный запуск сервиса).
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      # Один брокер — репликация невозможна.
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      # Без задержки ребалансировки консьюмер стартует сразу — в dev это
+      # экономит десятки секунд на каждом прогоне тестов.
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID:-5L6g3nShT-eMCtK--X86sw}
+    ports:
+      - "127.0.0.1:${KAFKA_PORT:-29092}:29092"
+    volumes:
+      - kafkadata:/var/lib/kafka/data
+    # Во всех healthcheck'ах ниже адрес 127.0.0.1, а не localhost: сервисы
+    # слушают 0.0.0.0 (только IPv4), а localhost внутри контейнера
+    # резолвится в ::1 — проверка получала бы connection refused.
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server 127.0.0.1:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 15
+      start_period: 20s
+
+  schema-registry:
+    image: confluentinc/cp-schema-registry:${SCHEMA_REGISTRY_VERSION:-7.8.0}
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      # Событийные схемы обязаны быть обратно совместимыми.
+      SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: backward
+    ports:
+      - "127.0.0.1:${SCHEMA_REGISTRY_PORT:-8081}:8081"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8081/subjects || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+  # ---------------------------------------------------------------- ClickHouse
+  clickhouse:
+    image: clickhouse/clickhouse-server:${CLICKHOUSE_VERSION:-24.8-alpine}
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-wb_analytics}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-wb_app}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:-wbapp}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ports:
+      # Нативный порт ClickHouse — 9000, тот же, что у MinIO. Разводим на хосте.
+      - "127.0.0.1:${CLICKHOUSE_HTTP_PORT:-8123}:8123"
+      - "127.0.0.1:${CLICKHOUSE_NATIVE_PORT:-9100}:9000"
+    volumes:
+      - chdata:/var/lib/clickhouse
+      - ./init/clickhouse:/docker-entrypoint-initdb.d:ro
+    ulimits:
+      # ClickHouse открывает много файлов; дефолт Docker ему мал.
+      nofile:
+        soft: 262144
+        hard: 262144
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8123/ping || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # --------------------------------------------------------------------- Redis
+  redis:
+    image: redis:7
+    command:
+      ["redis-server", "--save", "", "--appendonly", "no",
+       "--requirepass", "${REDIS_PASSWORD:-devredis}"]
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-16379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-devredis}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # --------------------------------------------------------------------- MinIO
+  minio:
+    image: minio/minio:${MINIO_VERSION:-RELEASE.2024-11-07T00-52-20Z}
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    ports:
+      - "127.0.0.1:${MINIO_API_PORT:-9002}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9003}:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  # Одноразовый контейнер: заводит бакет выгрузок и завершается.
+  minio-init:
+    image: minio/mc:${MC_VERSION:-RELEASE.2024-11-05T11-29-45Z}
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-minioadmin} ${MINIO_ROOT_PASSWORD:-minioadmin} &&
+      mc mb --ignore-existing local/${EXPORT_BUCKET:-wb-exports} &&
+      echo 'bucket ${EXPORT_BUCKET:-wb-exports} ready'
+      "
+    restart: "no"
+
+volumes:
+  pgdata:
+  kafkadata:
+  chdata:
+  miniodata:
