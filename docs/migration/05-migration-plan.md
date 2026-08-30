@@ -27,17 +27,22 @@ Django остаётся работающим и обслуживающим тр�
       **Эталон корректности всей миграции.**
 - [ ] Алиасы `/v1/*` к текущим путям в Django, без изменения поведения.
       Фронтенд переводится на `/v1` одним коммитом заранее.
-- [ ] Монорепозиторий по структуре из [док. 4, §4.10](04-tech-stack.md).
+- [x] Монорепозиторий по структуре из [док. 4, §4.10](04-tech-stack.md).
+      **Сделано:** T002-T004.
 - [ ] **`libs/platform`:** конфиг на Pydantic Settings, `structlog`,
       OTel-бутстрап с пробросом `traceparent` через Kafka, единый формат
       ошибок, keyset-пагинация, outbox, идемпотентность команд,
       auth-middleware, тест-фикстуры на testcontainers.
+      **Частично:** готов `config.py` (T010), остальные 12 модулей впереди.
 - [ ] **`tools/service-template`** (cookiecutter): каркас
       `domain/application/adapters/composition`, Dockerfile, Helm-values,
       набор тестов, пайплайн CI. Девять сервисов вручную не собираются.
 - [ ] Dev-окружение `docker compose`: PostgreSQL, **Kafka 4.x в режиме KRaft**
       (один контейнер), Schema Registry, ClickHouse, Redis, MinIO,
       Grafana + Tempo + Loki.
+      **Частично:** шесть сервисов подняты и проверены, поднимаются одной
+      командой `tools/dev-up.sh` (T005, T008). Стек наблюдаемости
+      (Grafana/Prometheus/Loki/Tempo) — задача T006, не начата.
 - [ ] Helm-чарт-шаблон и ArgoCD — **с фазы 1, а не в конце**.
 - [ ] CI: `uv`, `ruff`, `mypy --strict`, `pytest`, testcontainers,
       покрытие ≥ 80 %, `pip-audit`, Trivy, gitleaks. Пайплайн параметризован
