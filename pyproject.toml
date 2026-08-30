@@ -40,6 +40,10 @@ dev = [
 [tool.mypy]
 python_version = "3.13"
 strict = true
+# Без этого плагина mypy считает, что BaseSettings требует все поля
+# аргументами конструктора, и `ServiceSettings()` даёт ложную ошибку
+# call-arg: он не знает, что значения приходят из окружения.
+plugins = ["pydantic.mypy"]
 warn_unreachable = true
 show_error_codes = true
 pretty = true
