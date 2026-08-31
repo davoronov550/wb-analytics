@@ -32,7 +32,14 @@ dev = [
     "mypy>=1.14",
     "testcontainers>=4.9",
     "hypothesis>=6.120",
+    # Опциональные зависимости платформы: в тестовом окружении нужны все, чтобы
+    # libs/platform проверялся целиком. Сервисы по-прежнему объявляют только те
+    # extras, которые им действительно нужны — api-gateway не тянет ClickHouse.
+    "wb-platform[db,kafka,grpc,redis,http,web,otel]",
 ]
+
+[tool.uv.sources]
+wb-platform = { workspace = true }
 
 # --- Типизация ---
 # Конфигурация живёт здесь, а не в mypy.ini: на Windows mypy читает .ini

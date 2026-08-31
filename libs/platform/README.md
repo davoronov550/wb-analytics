@@ -17,7 +17,7 @@
 | `logging.py` | T011 | **готов** |
 | `errors.py` | T012 | **готов** |
 | `otel.py` | T013 | не начат |
-| `db.py` | T014 | не начат |
+| `db.py` | T014 | **готов** |
 | `pagination.py` | T015 | **готов** |
 | `outbox.py` | T016 | не начат |
 | `idempotency.py` | T017 | не начат |
