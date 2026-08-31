@@ -215,7 +215,9 @@ python manage.py spectacular --file contracts/openapi/v1.yaml --validate --fail-
 - [ ] CLI-обёртка, сохраняющая поведение `manage.py parse_wb`.
 - [ ] `services/scheduling`: планировщик на `FOR UPDATE SKIP LOCKED`,
       несколько реплик (**H7 закрыт**).
-- [ ] Замена Celery на Taskiq (**H8 закрыт**).
+- [ ] Снятие Celery: фоновая работа переходит на Kafka-консьюмеры
+      (**H8 закрыт**). Отдельная очередь задач не вводится —
+      обоснование в [док. 4](04-tech-stack.md).
 
 **Выход:** сбор выходит на целевые 10 000 товаров/мин.
 

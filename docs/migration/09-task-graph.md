@@ -502,7 +502,7 @@ graph LR
   P4_5["4.5<br/>Idempotency-Key"]
   P4_6["4.6<br/>CLI-обёртка, сохраняющая поведение"]
   P4_7["4.7<br/>scheduling-service"]
-  P4_8["4.8<br/>Celery → Taskiq"]
+  P4_8["4.8<br/>Снятие Celery: фоновая"]
   P2_5(["2.5<br/>фаза 2"])
   P2_7(["2.7<br/>фаза 2"])
   T017(["T017<br/>фаза 0"])
