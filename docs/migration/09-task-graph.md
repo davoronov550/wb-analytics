@@ -4,7 +4,7 @@
 > [док. 8](08-tasks.md) и выполните `uv run python tools/task-graph.py`.
 > Единственный источник статусов — таблицы задач в док. 8.
 
-Готово **8 из 119** — задачи фаз 0-1 и рабочие пакеты фаз 2-6.
+Готово **9 из 120** — задачи фаз 0-1 и рабочие пакеты фаз 2-6.
 
 ## Как читать
 
@@ -40,7 +40,7 @@
 
 ## Фаза 0 · Фундамент
 
-Готово 8 из 47.
+Готово 9 из 47.
 
 ```mermaid
 graph LR
@@ -188,7 +188,7 @@ graph LR
   class T008 done;
   class T010 done;
   class T011 done;
-  class T012 path;
+  class T012 done;
   class T013 todo;
   class T014 todo;
   class T015 path;
@@ -236,7 +236,7 @@ graph LR
 
 ## Фаза 1 · catalog-service на FastAPI
 
-Готово 0 из 30.
+Готово 0 из 31.
 
 ```mermaid
 graph LR
@@ -287,6 +287,7 @@ graph LR
     T153["T153<br/>Многоуровневая сортировка отправляется"]
     T154["T154<br/>PAGE_SIZE = 1000"]
     T155["T155<br/>ProductTable.test.tsx"]
+    T156["T156<br/>readError"]
   end
   T012(["T012<br/>фаза 0"])
   T014(["T014<br/>фаза 0"])
@@ -332,6 +333,7 @@ graph LR
   T152 --> T153
   T153 --> T154
   T154 --> T155
+  T132 --> T156
   class T100 path;
   class T101 path;
   class T102 path;
@@ -362,6 +364,7 @@ graph LR
   class T153 todo;
   class T154 todo;
   class T155 todo;
+  class T156 todo;
   class T012 ext;
   class T014 ext;
   class T015 ext;
