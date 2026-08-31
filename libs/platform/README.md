@@ -18,7 +18,7 @@
 | `errors.py` | T012 | **готов** |
 | `otel.py` | T013 | не начат |
 | `db.py` | T014 | не начат |
-| `pagination.py` | T015 | не начат |
+| `pagination.py` | T015 | **готов** |
 | `outbox.py` | T016 | не начат |
 | `idempotency.py` | T017 | не начат |
 | `kafka.py` | T018 | не начат |
