@@ -29,6 +29,8 @@ db = ["sqlalchemy[asyncio]>=2.0", "asyncpg>=0.30", "alembic>=1.14"]
 kafka = ["aiokafka>=0.12"]
 grpc = ["grpcio>=1.68", "grpcio-status>=1.68", "protobuf>=5.29"]
 redis = ["redis>=5.2"]
+# RS256 требует cryptography; pyjwt без extra умеет только HMAC.
+auth = ["pyjwt[crypto]>=2.10"]
 http = ["aiohttp>=3.11", "tenacity>=9.0", "aiolimiter>=1.2"]
 web = ["fastapi>=0.115", "uvicorn[standard]>=0.34", "dishka>=1.4"]
 otel = [

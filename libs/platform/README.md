@@ -19,13 +19,13 @@
 | `otel.py` | T013 | **готов** |
 | `db.py` | T014 | **готов** |
 | `pagination.py` | T015 | **готов** |
-| `outbox.py` | T016 | не начат |
-| `idempotency.py` | T017 | не начат |
-| `kafka.py` | T018 | не начат |
-| `grpc_.py` | T019 | не начат |
-| `auth.py` | T020 | не начат |
-| `health.py` | T021 | не начат |
-| `testing/` | T022 | не начат |
+| `outbox.py` | T016 | **готов** |
+| `idempotency.py` | T017 | **готов** |
+| `kafka.py` | T018 | **готов** |
+| `grpc_.py` | T019 | **готов** |
+| `auth.py` | T020 | **готов** |
+| `health.py` | T021 | **готов** |
+| `testing/` | T022 | **готов** |
 
 ## Зависимости
 
@@ -36,6 +36,19 @@
 # services/catalog/pyproject.toml
 dependencies = ["wb-platform[db,kafka,web,otel]"]
 ```
+
+## Интеграционные тесты
+
+Модули с реальной инфраструктурой (`outbox`, `testing/`) проверяются против
+поднятого dev-окружения:
+
+```bash
+./tools/dev-up.sh
+WB_TEST_USE_COMPOSE=1 uv run pytest libs/platform -m integration
+```
+
+Без переменной используются testcontainers — так работает CI, где стека
+`docker compose` нет.
 
 ## Разработка
 
