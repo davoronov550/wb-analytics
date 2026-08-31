@@ -32,10 +32,14 @@ dev = [
     "mypy>=1.14",
     "testcontainers>=4.9",
     "hypothesis>=6.120",
+    # Требуется starlette.testclient. Тестовый инструмент, а не отказ от
+    # решения в пользу aiohttp: продакшн-клиент остаётся aiohttp.
+    "httpx2>=0.28",
     # Опциональные зависимости платформы: в тестовом окружении нужны все, чтобы
     # libs/platform проверялся целиком. Сервисы по-прежнему объявляют только те
     # extras, которые им действительно нужны — api-gateway не тянет ClickHouse.
     "wb-platform[db,kafka,grpc,redis,http,web,otel,auth]",
+    "cookiecutter>=2.6",
 ]
 
 [tool.uv.sources]
@@ -57,7 +61,7 @@ show_error_codes = true
 pretty = true
 # `services` добавляется сюда вместе с первым сервисом (T100): mypy падает
 # на каталоге без единого .py, а не пропускает его.
-files = ["libs"]
+files = ["libs", "tools/tests"]
 exclude = ["^backend/", "^frontend/", "^libs/grpc_stubs/", "/alembic/versions/"]
 
 [[tool.mypy.overrides]]
@@ -68,7 +72,7 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 # Библиотеки без аннотаций. Список намеренно короткий: каждая строка здесь —
 # осознанная уступка, а не способ заглушить ошибку.
-module = ["testcontainers.*", "clickhouse_connect.*", "aiokafka.*"]
+module = ["testcontainers.*", "clickhouse_connect.*", "aiokafka.*", "cookiecutter.*"]
 ignore_missing_imports = true
 
 # --- Тесты ---
@@ -77,7 +81,7 @@ asyncio_mode = "strict"
 addopts = "--strict-markers"
 # backend/ исключён: у доживающего Django свой pytest-конфиг и свой
 # DJANGO_SETTINGS_MODULE, собирать его отсюда нельзя.
-testpaths = ["libs", "services"]
+testpaths = ["libs", "services", "tools/tests"]
 markers = [
     # Требуют поднятой инфраструктуры (testcontainers). Офлайн-прогон:
     #   uv run pytest -m "not integration"

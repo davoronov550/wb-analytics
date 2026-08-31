@@ -1,0 +1,29 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "wb-{{ cookiecutter.service_name }}"
+version = "0.1.0"
+description = "{{ cookiecutter.description }}"
+requires-python = ">=3.13"
+dependencies = [
+    "wb-platform[web,otel{% if cookiecutter.has_database == 'yes' %},db{% endif %}{% if cookiecutter.has_kafka == 'yes' %},kafka,redis{% endif %}{% if cookiecutter.has_grpc == 'yes' %},grpc{% endif %}]",
+]
+
+[tool.uv.sources]
+wb-platform = { workspace = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/{{ cookiecutter.package_name }}"]
+
+# Extras declared by actual need, never "just in case": a spare extra pulls a
+# driver the service never calls into its image and its vulnerability surface.
+#
+# Comments here are English, unlike the rest of the repository's configuration.
+# cookiecutter copies a file without rendering when binaryornot calls it
+# binary, and that heuristic trips at roughly 30% high bytes in the first
+# kilobyte — which a few lines of Cyrillic in a short file reach easily. The
+# result is a generated service full of unrendered placeholders, produced
+# silently. tools/tests/test_service_template.py fails on that, but keeping
+# this particular file ASCII-dominant avoids the trap in the first place.

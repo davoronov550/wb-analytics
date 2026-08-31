@@ -1,0 +1,154 @@
+# CI for the migration monorepo.
+#
+# The service matrix is discovered from `services/`, not written out. With nine
+# services and a template that generates them, a hand-maintained list is a list
+# that will be out of date — and the failure mode is silent: a service simply
+# stops being tested, and nothing reports that.
+
+name: CI
+
+on:
+  push:
+    branches: [main, "migration/**"]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  UV_VERSION: "0.9.7"
+
+jobs:
+  quality:
+    name: Lint and types
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --all-packages --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+
+  plan-is-current:
+    name: Task graph matches the backlog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --locked
+      # A plan that disagrees with the repository is worse than no plan:
+      # people believe it.
+      - run: uv run python tools/task-graph.py --check
+
+  discover:
+    name: Discover services
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.list.outputs.services }}
+      any: ${{ steps.list.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        shell: bash
+        run: |
+          services=$(find services -mindepth 1 -maxdepth 1 -type d \
+                       -exec test -f '{}/pyproject.toml' \; -print \
+                     | xargs -r -n1 basename | jq -R . | jq -cs .)
+          echo "services=${services:-[]}" >> "$GITHUB_OUTPUT"
+          if [ "${services:-[]}" = "[]" ]; then
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  platform:
+    name: libs/platform
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: wb_app
+          POSTGRES_PASSWORD: wbapp
+          POSTGRES_DB: wb_catalog
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U wb_app"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      TEST_DATABASE_DSN: postgresql+asyncpg://wb_app:wbapp@127.0.0.1:5432/wb_catalog
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --all-packages --locked
+      - run: uv run pytest libs/platform --cov=wb_platform --cov-report=term-missing
+
+  service:
+    name: ${{ matrix.service }}
+    needs: [discover]
+    if: needs.discover.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      # One failing service must not hide the state of the other eight.
+      fail-fast: false
+      matrix:
+        service: ${{ fromJSON(needs.discover.outputs.services) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --all-packages --locked
+      - run: uv run pytest services/${{ matrix.service }} -q -m "not integration"
+
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          # Repository root: the service depends on libs/platform and the root
+          # lockfile, neither of which a narrower context can see.
+          context: .
+          file: services/${{ matrix.service }}/Dockerfile
+          push: false
+          load: true
+          tags: wb-${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Scan image
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: wb-${{ matrix.service }}:${{ github.sha }}
+          severity: HIGH,CRITICAL
+          exit-code: "1"
+          ignore-unfixed: true
+
+  security:
+    name: Dependencies and secrets
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # gitleaks needs history to scan commits, not just the tree: a secret
+          # removed in a later commit is still published.
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --all-packages --locked
+      - run: uvx pip-audit --strict
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

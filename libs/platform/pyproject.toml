@@ -43,3 +43,6 @@ otel = [
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/wb_platform"]
+# PEP 561: без этого маркера mypy считает пакет нетипизированным при импорте
+# извне, и все девять сервисов теряют проверку типов на границе с платформой.
+artifacts = ["src/wb_platform/py.typed"]

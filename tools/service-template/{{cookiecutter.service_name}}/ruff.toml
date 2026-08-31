@@ -1,0 +1,5 @@
+# Extends the repository configuration and adds this service's source root.
+# Needed because ruff's `src` does not accept globs, so the root config cannot
+# name nine service directories that do not exist yet.
+extend = "../../ruff.toml"
+src = ["src"]

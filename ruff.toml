@@ -5,8 +5,13 @@
 
 line-length = 100
 target-version = "py313"
-src = ["libs", "services"]
-extend-exclude = ["backend", "frontend", "libs/grpc_stubs"]
+# Корни исходников для этого конфига. Глобы здесь не поддерживаются, поэтому
+# каждый сервис несёт собственный ruff.toml с `src = ["src"]` — он приходит из
+# шаблона, так что забыть его нельзя.
+src = ["libs/platform/src", "tools"]
+# tools/service-template исключён: он содержит файлы, валидные только после
+# генерации — ruff.toml с относительным extend и Jinja-плейсхолдеры в путях.
+extend-exclude = ["backend", "frontend", "libs/grpc_stubs", "tools/service-template"]
 
 [lint]
 select = [
