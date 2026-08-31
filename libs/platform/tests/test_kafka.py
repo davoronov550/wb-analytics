@@ -21,15 +21,21 @@ from typing import Any
 import pytest
 
 from wb_platform.config import Environment, LogLevel, ObservabilitySettings, ServiceSettings
+from wb_platform.errors import ServiceUnavailableError
 from wb_platform.kafka import (
     EventConsumer,
     EventProducer,
     InboundMessage,
     Outcome,
     RedisDedupStore,
+    TopicProblem,
+    TopicSpec,
     consumer_config,
     dlq_topic,
+    ensure_topics,
     producer_config,
+    require_durable_topics,
+    verify_topics,
 )
 from wb_platform.otel import configure_tracing, current_trace_id, shutdown_tracing, traced
 
@@ -398,3 +404,152 @@ class TestRedisDedupStore:
         assert await store.record_attempt("e2") == 2
         await store.forget_attempts("e2")
         assert await store.record_attempt("e2") == 1
+
+
+# --------------------------------------------------------------------------
+# Topic durability
+# --------------------------------------------------------------------------
+
+
+class _FakeAdmin:
+    """A broker whose topic configuration the test dictates."""
+
+    def __init__(self, *, replicas: int, min_isr: str, unclean: str = "false") -> None:
+        self.replicas = replicas
+        self.min_isr = min_isr
+        self.unclean = unclean
+        self.created: list[Any] = []
+
+    async def describe_topics(self, topics: list[str]) -> list[dict[str, Any]]:
+        return [
+            {
+                "topic": name,
+                "error_code": 0,
+                "partitions": [
+                    {"partition": 0, "replicas": list(range(self.replicas)), "isr": [0]}
+                ],
+            }
+            for name in topics
+        ]
+
+    async def describe_configs(self, resources: list[Any]) -> list[Any]:
+        entries = [
+            ("min.insync.replicas", self.min_isr),
+            ("unclean.leader.election.enable", self.unclean),
+        ]
+
+        class _Response:
+            def __init__(self) -> None:
+                self.resources = [(0, "", 0, "", entries)]
+
+        return [_Response() for _ in resources]
+
+    async def create_topics(self, new_topics: list[Any]) -> None:
+        self.created.extend(new_topics)
+
+
+SPEC = TopicSpec(name="catalog.products.collected.v1")
+
+
+class TestTopicDurability:
+    """`acks=all` is meaningless unless the topic agrees, so the topic is checked."""
+
+    @pytest.mark.asyncio
+    async def test_correctly_configured_topic_has_no_problems(self) -> None:
+        admin = _FakeAdmin(replicas=3, min_isr="2")
+
+        assert await verify_topics(admin, [SPEC]) == []
+
+    @pytest.mark.asyncio
+    async def test_min_insync_replicas_of_one_is_reported(self) -> None:
+        """The setting that silently turns acks=all into acks=1.
+
+        "All in-sync replicas" is satisfied by the leader alone, so an
+        acknowledged write can still vanish with that leader. Setting acks
+        without this is not a partial guarantee — it is none.
+        """
+        admin = _FakeAdmin(replicas=3, min_isr="1")
+
+        (problem,) = await verify_topics(admin, [SPEC])
+
+        assert problem.setting == "min.insync.replicas"
+        assert problem.actual == "1"
+
+    @pytest.mark.asyncio
+    async def test_insufficient_replication_factor_is_reported(self) -> None:
+        admin = _FakeAdmin(replicas=1, min_isr="2")
+
+        settings = {p.setting for p in await verify_topics(admin, [SPEC])}
+
+        assert "replication.factor" in settings
+
+    @pytest.mark.asyncio
+    async def test_unclean_leader_election_is_reported(self) -> None:
+        """Promoting a lagging replica trades a brief outage for lost data."""
+        admin = _FakeAdmin(replicas=3, min_isr="2", unclean="true")
+
+        (problem,) = await verify_topics(admin, [SPEC])
+
+        assert problem.setting == "unclean.leader.election.enable"
+
+    @pytest.mark.asyncio
+    async def test_missing_topic_is_reported(self) -> None:
+        class _Empty(_FakeAdmin):
+            async def describe_topics(self, topics: list[str]) -> list[dict[str, Any]]:
+                return [{"topic": name, "error_code": 3, "partitions": []} for name in topics]
+
+        (problem,) = await verify_topics(_Empty(replicas=3, min_isr="2"), [SPEC])
+
+        assert problem.setting == "existence"
+
+    @pytest.mark.asyncio
+    async def test_unreadable_config_response_fails_the_check(self) -> None:
+        """A protocol shape change must surface as a failed check, not an
+        IndexError at startup — and certainly not as a silent pass."""
+
+        class _Broken(_FakeAdmin):
+            async def describe_configs(self, resources: list[Any]) -> list[Any]:
+                return [object() for _ in resources]
+
+        settings = {
+            p.setting for p in await verify_topics(_Broken(replicas=3, min_isr="2"), [SPEC])
+        }
+
+        assert "min.insync.replicas" in settings
+
+
+class TestEnforcement:
+    def test_production_refuses_to_start(self) -> None:
+        """A service that starts and quietly loses acknowledged writes is
+        worse than one that does not start."""
+        problems = [TopicProblem("t", "min.insync.replicas", "2", "1")]
+
+        with pytest.raises(ServiceUnavailableError):
+            require_durable_topics(problems, environment="production")
+
+    def test_local_only_warns(self) -> None:
+        """A single-broker dev stack cannot satisfy replication_factor=3, and
+        failing there would only teach everyone to ignore the check."""
+        problems = [TopicProblem("t", "replication.factor", "3", "1")]
+
+        require_durable_topics(problems, environment="local")
+
+    def test_no_problems_passes_everywhere(self) -> None:
+        require_durable_topics([], environment="production")
+
+
+class TestTopicSpec:
+    def test_defaults_are_the_durable_ones(self) -> None:
+        configs = SPEC.topic_configs()
+
+        assert configs["min.insync.replicas"] == "2"
+        assert configs["unclean.leader.election.enable"] == "false"
+
+    @pytest.mark.asyncio
+    async def test_topics_are_created_explicitly_not_auto(self) -> None:
+        """An auto-created topic gets broker defaults — the unsafe ones."""
+        admin = _FakeAdmin(replicas=3, min_isr="2")
+
+        await ensure_topics(admin, [SPEC])
+
+        assert len(admin.created) == 1

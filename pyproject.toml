@@ -68,7 +68,7 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 # Библиотеки без аннотаций. Список намеренно короткий: каждая строка здесь —
 # осознанная уступка, а не способ заглушить ошибку.
-module = ["testcontainers.*", "clickhouse_connect.*"]
+module = ["testcontainers.*", "clickhouse_connect.*", "aiokafka.*"]
 ignore_missing_imports = true
 
 # --- Тесты ---

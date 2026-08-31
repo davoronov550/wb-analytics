@@ -50,6 +50,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any, Final, Protocol
 
+from wb_platform.errors import ServiceUnavailableError
 from wb_platform.logging import bind_context, clear_context, get_logger
 from wb_platform.otel import (
     extract_from_kafka_headers,
@@ -65,9 +66,14 @@ __all__ = [
     "InboundMessage",
     "Outcome",
     "RedisDedupStore",
+    "TopicProblem",
+    "TopicSpec",
     "consumer_config",
     "dlq_topic",
+    "ensure_topics",
     "producer_config",
+    "require_durable_topics",
+    "verify_topics",
 ]
 
 _EVENT_ID_HEADER: Final = "event_id"
@@ -396,3 +402,175 @@ class EventProducer:
             await self._producer.send_and_wait(
                 dlq_topic(message.topic), message.value, key=message.key, headers=headers
             )
+
+
+# --------------------------------------------------------------------------
+# Topic durability
+# --------------------------------------------------------------------------
+
+#: Replicas a topic needs to survive losing a broker.
+DURABLE_REPLICATION_FACTOR: Final = 3
+
+#: Replicas that must acknowledge before a write is confirmed.
+#:
+#: This is the number that gives ``acks="all"`` its meaning. At 1 — aiokafka's
+#: and Kafka's default — "all in-sync replicas" is satisfied by the leader
+#: alone, so ``acks="all"`` behaves exactly like ``acks=1`` and a leader
+#: failure loses acknowledged writes. Setting one without the other is not a
+#: partial guarantee; it is no guarantee.
+DURABLE_MIN_INSYNC_REPLICAS: Final = 2
+
+
+@dataclass(frozen=True, slots=True)
+class TopicSpec:
+    """How a topic must be configured for its writes to be durable."""
+
+    name: str
+    partitions: int = 3
+    replication_factor: int = DURABLE_REPLICATION_FACTOR
+    min_insync_replicas: int = DURABLE_MIN_INSYNC_REPLICAS
+    retention_ms: int | None = None
+
+    def topic_configs(self) -> dict[str, str]:
+        configs = {
+            "min.insync.replicas": str(self.min_insync_replicas),
+            # Never promote a replica that is behind: doing so trades a
+            # short outage for permanent data loss.
+            "unclean.leader.election.enable": "false",
+        }
+        if self.retention_ms is not None:
+            configs["retention.ms"] = str(self.retention_ms)
+        return configs
+
+
+@dataclass(frozen=True, slots=True)
+class TopicProblem:
+    topic: str
+    setting: str
+    expected: str
+    actual: str
+
+    def __str__(self) -> str:
+        return f"{self.topic}: {self.setting} is {self.actual}, expected {self.expected}"
+
+
+class _AdminClient(Protocol):
+    async def describe_topics(self, topics: list[str]) -> list[dict[str, Any]]: ...
+
+    async def describe_configs(self, resources: list[Any]) -> list[Any]: ...
+
+    async def create_topics(self, new_topics: list[Any]) -> Any: ...
+
+
+def _config_entries(response: Any) -> dict[str, str]:
+    """Pull ``{name: value}`` out of a DescribeConfigs response.
+
+    The protocol object is nested tuples rather than a documented structure,
+    so this is deliberately defensive: a shape change should surface as an
+    empty mapping and a failed check, not an IndexError at startup.
+    """
+    try:
+        resource = response.resources[0]
+        return {entry[0]: entry[1] for entry in resource[4]}
+    except (AttributeError, IndexError, TypeError):
+        return {}
+
+
+async def verify_topics(admin: _AdminClient, specs: Sequence[TopicSpec]) -> list[TopicProblem]:
+    """Report every topic whose durability settings fall short.
+
+    Reads the broker rather than trusting the deployment: a topic created by
+    hand, by an older chart, or auto-created by a producer has none of these
+    settings, and nothing about the running system says so.
+    """
+    from aiokafka.admin.config_resource import ConfigResource, ConfigResourceType
+
+    problems: list[TopicProblem] = []
+
+    described = await admin.describe_topics([spec.name for spec in specs])
+    by_name = {item["topic"]: item for item in described}
+
+    configs = await admin.describe_configs(
+        [ConfigResource(ConfigResourceType.TOPIC, spec.name) for spec in specs]
+    )
+    entries_by_name = {
+        spec.name: _config_entries(response) for spec, response in zip(specs, configs, strict=False)
+    }
+
+    for spec in specs:
+        described_topic = by_name.get(spec.name)
+        if described_topic is None or described_topic.get("error_code"):
+            problems.append(TopicProblem(spec.name, "existence", "present", "missing"))
+            continue
+
+        partitions = described_topic.get("partitions") or []
+        actual_rf = min((len(p.get("replicas") or []) for p in partitions), default=0)
+        if actual_rf < spec.replication_factor:
+            problems.append(
+                TopicProblem(
+                    spec.name, "replication.factor", str(spec.replication_factor), str(actual_rf)
+                )
+            )
+
+        entries = entries_by_name.get(spec.name, {})
+        actual_isr = entries.get("min.insync.replicas", "?")
+        if actual_isr == "?" or int(actual_isr) < spec.min_insync_replicas:
+            problems.append(
+                TopicProblem(
+                    spec.name,
+                    "min.insync.replicas",
+                    str(spec.min_insync_replicas),
+                    str(actual_isr),
+                )
+            )
+
+        unclean = entries.get("unclean.leader.election.enable", "?")
+        if unclean != "false":
+            problems.append(
+                TopicProblem(spec.name, "unclean.leader.election.enable", "false", str(unclean))
+            )
+
+    return problems
+
+
+async def ensure_topics(admin: _AdminClient, specs: Sequence[TopicSpec]) -> None:
+    """Create any missing topic with the right settings from the start.
+
+    Explicit creation rather than relying on ``auto.create.topics.enable``:
+    an auto-created topic gets broker defaults, which are exactly the unsafe
+    ones this module exists to avoid.
+    """
+    from aiokafka.admin import NewTopic
+
+    await admin.create_topics(
+        [
+            NewTopic(
+                spec.name,
+                num_partitions=spec.partitions,
+                replication_factor=spec.replication_factor,
+                topic_configs=spec.topic_configs(),
+            )
+            for spec in specs
+        ]
+    )
+
+
+def require_durable_topics(problems: Sequence[TopicProblem], *, environment: str) -> None:
+    """Refuse to start in production when durability is not actually configured.
+
+    Environment-aware because a single-broker dev stack cannot satisfy
+    ``replication_factor=3`` and demanding it there would only teach everyone
+    to ignore the check. In production the same finding is fatal: a service
+    that starts and quietly loses acknowledged writes is worse than one that
+    does not start.
+    """
+    if not problems:
+        return
+
+    listing = "; ".join(str(problem) for problem in problems)
+    if environment == "production":
+        raise ServiceUnavailableError(
+            "Kafka topics are not configured for durable writes.",
+            context={"problems": listing},
+        )
+    logger.warning("Kafka topic durability is below production settings", problems=listing)
