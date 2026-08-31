@@ -295,7 +295,7 @@ T010 (`config.py`), T011 (`logging.py`), T012 (`errors.py`), T010-T022 — **в�
 | 6.2 | — |  `pact` на REST-периметре, `buf breaking` как gate для gRPC | 5.7 |
 | 6.3 | — |  Ресурсные бюджеты и PodDisruptionBudget на девять сервисов | 5.9 |
 | 6.4 | — |  `k6` до SLO, gate на регресс в CI | 5.9 |
-| 6.5 | — |  Хаос-тесты: брокер, под, недоступность Wildberries | 6.1, 6.3 |
+| 6.5 | — |  Хаос-тесты: брокер, под, недоступность Wildberries; проверка настроек топиков (RF=3, min.insync.replicas=2, unclean.leader.election=false) — остаточный риск R14 | 6.1, 6.3 |
 | 6.6 | — |  Дашборды RED/USE + кворум KRaft, алерты на error budget | T006, 5.9 |
 | 6.7 | — |  Runbook, регламент повышения `metadata.version` (**риск R12**), on-call | 6.5, 6.6 |
 | 6.8 | — |  Проверка отката на живом стенде | 6.7 |
