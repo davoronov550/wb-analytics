@@ -95,6 +95,11 @@ class DatabaseSettings(_Settings):
     model_config = SettingsConfigDict(**_BASE_CONFIG, env_prefix="DB_")
 
     dsn: PostgresDsn
+    # True when the DSN points at PgBouncer rather than PostgreSQL directly.
+    # Not inferred from the host: a pooler can sit behind any name, and guessing
+    # wrong picks the wrong pooling strategy silently. See db.build_engine_kwargs.
+    pgbouncer: bool = False
+    # Ignored when `pgbouncer` is set — NullPool takes no sizing arguments.
     pool_size: int = Field(default=10, ge=1)
     max_overflow: int = Field(default=5, ge=0)
     # Fail fast when PostgreSQL is unreachable instead of hanging the readiness

@@ -19,6 +19,7 @@ from typing import Any, Self, cast
 import pytest
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+from sqlalchemy.pool import NullPool
 
 from wb_platform.config import DatabaseSettings
 from wb_platform.db import (
@@ -115,6 +116,40 @@ class TestEngine:
 
     def test_echo_follows_settings(self) -> None:
         assert create_engine(_settings(echo_sql=True)).echo is True
+
+    def test_behind_pgbouncer_the_pool_is_disabled(self) -> None:
+        """SQLAlchemy's own guidance: use NullPool behind PgBouncer.
+
+        A second pool on top would hold PgBouncer *client* slots open, which is
+        the multiplexing PgBouncer is deployed for. NullPool also rejects
+        sizing arguments outright, so they must not be passed.
+        """
+        kwargs = build_engine_kwargs(_settings(pgbouncer=True))
+
+        assert kwargs["poolclass"] is NullPool
+        assert "pool_size" not in kwargs
+        assert "max_overflow" not in kwargs
+        assert "pool_pre_ping" not in kwargs
+
+    def test_direct_connection_keeps_a_real_pool(self) -> None:
+        """No PgBouncer in dev or in tests — pooling is worth having there."""
+        kwargs = build_engine_kwargs(_settings(pgbouncer=False))
+
+        assert "poolclass" not in kwargs
+        assert kwargs["pool_pre_ping"] is True
+
+    def test_pinned_connect_args_apply_in_both_modes(self) -> None:
+        """The statement caches are a driver concern, not a pooling one."""
+        for pgbouncer in (True, False):
+            args = build_engine_kwargs(_settings(pgbouncer=pgbouncer))["connect_args"]
+            assert args["statement_cache_size"] == 0
+            assert args["prepared_statement_cache_size"] == 0
+
+    def test_engine_builds_in_pgbouncer_mode(self) -> None:
+        """NullPool rejects pool_size with a TypeError — only a real build shows it."""
+        engine = create_engine(_settings(pgbouncer=True))
+
+        assert type(engine.pool).__name__ == "NullPool"
 
     def test_engine_actually_builds_with_these_arguments(self) -> None:
         """Smoke test with real SQLAlchemy — no mock would have caught this.

@@ -33,6 +33,7 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
+from sqlalchemy.pool import NullPool
 
 from wb_platform.config import DatabaseSettings
 from wb_platform.errors import ServiceUnavailableError
@@ -118,15 +119,29 @@ def build_engine_kwargs(
     back off a built engine through private pool attributes that break on the
     library's next refactor.
     """
-    return {
+    kwargs: dict[str, Any] = {
         "connect_args": build_connect_args(settings, connect_args),
-        "pool_size": settings.pool_size,
-        "max_overflow": settings.max_overflow,
-        # The counterpart of Django's CONN_HEALTH_CHECKS: without it the pool
-        # hands out connections the server has already closed.
-        "pool_pre_ping": True,
         "echo": settings.echo_sql,
     }
+
+    if settings.pgbouncer:
+        # SQLAlchemy's own documentation is explicit: behind PgBouncer use
+        # NullPool. A second pool on top would hold PgBouncer *client* slots
+        # open, which is exactly the multiplexing we deploy PgBouncer to get.
+        # NullPool also takes no sizing arguments — passing pool_size raises.
+        # Pre-ping is pointless here: every checkout is already a new connection.
+        #
+        # Requires `server_reset_query = DISCARD ALL` on the PgBouncer side, or
+        # prepared statements accumulate on the backend and degrade it.
+        kwargs["poolclass"] = NullPool
+        return kwargs
+
+    kwargs["pool_size"] = settings.pool_size
+    kwargs["max_overflow"] = settings.max_overflow
+    # The counterpart of Django's CONN_HEALTH_CHECKS: without it the pool hands
+    # out connections the server has already closed.
+    kwargs["pool_pre_ping"] = True
+    return kwargs
 
 
 def create_engine(
