@@ -4,13 +4,22 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
 from catalog.adapters.inbound.http.request_filters import parse_ordering, parse_product_filter
-from catalog.adapters.inbound.http.serializers import ParseJobSerializer, ProductViewSerializer
+from catalog.adapters.inbound.http.schema_params import PRODUCT_LIST_PARAMETERS
+from catalog.adapters.inbound.http.serializers import (
+    ErrorSerializer,
+    ParseEnqueuedSerializer,
+    ParseJobSerializer,
+    ParseRequestSerializer,
+    ProductPageSerializer,
+    ProductViewSerializer,
+)
 from catalog.application.errors import InvalidFilter
 from catalog.composition import container
 
@@ -34,6 +43,12 @@ def _positive_int(params: Mapping, key: str, default: int, maximum: int | None =
 
 
 class ProductListView(APIView):
+    @extend_schema(
+        operation_id="products_list",
+        summary="List products",
+        parameters=PRODUCT_LIST_PARAMETERS,
+        responses={200: ProductPageSerializer, 400: ErrorSerializer},
+    )
     def get(self, request: Request) -> Response:
         params = request.query_params
         product_filter = parse_product_filter(params)
@@ -54,6 +69,17 @@ class ParseView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "parse"
 
+    @extend_schema(
+        operation_id="collections_create",
+        summary="Enqueue a collection run",
+        request=ParseRequestSerializer,
+        responses={
+            202: ParseEnqueuedSerializer,
+            400: ErrorSerializer,
+            429: ErrorSerializer,
+            502: ErrorSerializer,
+        },
+    )
     def post(self, request: Request) -> Response:
         data = request.data if isinstance(request.data, Mapping) else {}
         query = data.get("query")
@@ -83,6 +109,11 @@ class ParseView(APIView):
 class TaskStatusView(APIView):
     """GET /api/tasks/{task_id}/ — async collection status."""
 
+    @extend_schema(
+        operation_id="collections_retrieve",
+        summary="Collection run status",
+        responses={200: ParseJobSerializer, 404: ErrorSerializer},
+    )
     def get(self, request: Request, task_id: str) -> Response:
         job = container.build_parse_job_repository().get(task_id)
         if job is None:

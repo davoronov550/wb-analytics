@@ -6,6 +6,7 @@ from collections.abc import Mapping
 
 from django.contrib.auth import get_user_model
 from rest_framework import status
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -15,7 +16,16 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from accounts.adapters.inbound.http.serializers import RegisterSerializer, SavedSearchSerializer
+from accounts.adapters.inbound.http.serializers import (
+    AccountSerializer,
+    GoogleAuthRequestSerializer,
+    LogoutRequestSerializer,
+    RegisteredSerializer,
+    RegisterSerializer,
+    SavedSearchSerializer,
+    TokenPairSerializer,
+)
+from catalog.adapters.inbound.http.serializers import ErrorSerializer
 from accounts.adapters.outbound.persistence.models import ExternalIdentityModel
 from accounts.application.errors import InvalidCredential
 from accounts.composition import container
@@ -40,6 +50,12 @@ class RegisterView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "auth"
 
+    @extend_schema(
+        operation_id="auth_register",
+        summary="Create an account",
+        request=RegisterSerializer,
+        responses={201: RegisteredSerializer, 400: ErrorSerializer, 429: ErrorSerializer},
+    )
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -59,6 +75,12 @@ class GoogleAuthView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "auth"
 
+    @extend_schema(
+        operation_id="auth_google",
+        summary="Exchange a Google ID token for a session",
+        request=GoogleAuthRequestSerializer,
+        responses={200: TokenPairSerializer, 400: ErrorSerializer, 401: ErrorSerializer},
+    )
     def post(self, request: Request) -> Response:
         credential = request.data.get("id_token")
         if not credential:
@@ -86,6 +108,11 @@ class GoogleAuthView(APIView):
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="auth_me",
+        summary="The caller's own account",
+        responses={200: AccountSerializer, 401: ErrorSerializer},
+    )
     def get(self, request: Request) -> Response:
         return Response(
             {
@@ -108,6 +135,14 @@ class LogoutView(APIView):
 
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="auth_logout",
+        summary="Revoke the caller's refresh token",
+        request=LogoutRequestSerializer,
+        # 205 even when the client no longer holds the token: there is nothing
+        # left to revoke, which is not an error for the caller.
+        responses={205: None, 401: ErrorSerializer},
+    )
     def post(self, request: Request) -> Response:
         raw = request.data.get("refresh") if isinstance(request.data, Mapping) else None
         if raw:
@@ -123,10 +158,21 @@ class LogoutView(APIView):
 class SavedSearchListView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="saved_searches_list",
+        summary="List the caller's saved searches",
+        responses={200: SavedSearchSerializer(many=True), 401: ErrorSerializer},
+    )
     def get(self, request: Request) -> Response:
         items = container.build_manage_saved_searches().list(request.user.id)
         return Response(SavedSearchSerializer(items, many=True).data)
 
+    @extend_schema(
+        operation_id="saved_searches_create",
+        summary="Save a set of filters under a name",
+        request=SavedSearchSerializer,
+        responses={201: SavedSearchSerializer, 400: ErrorSerializer, 401: ErrorSerializer},
+    )
     def post(self, request: Request) -> Response:
         serializer = SavedSearchSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -142,6 +188,11 @@ class SavedSearchListView(APIView):
 class SavedSearchDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="saved_searches_destroy",
+        summary="Delete a saved search",
+        responses={204: None, 404: ErrorSerializer},
+    )
     def delete(self, request: Request, saved_id: int) -> Response:
         if not container.build_manage_saved_searches().delete(request.user.id, saved_id):
             return Response({"detail": "Not found."}, status=404)

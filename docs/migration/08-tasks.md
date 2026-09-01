@@ -41,7 +41,7 @@
 
 | Фаза | Готово | Всего | Комментарий |
 |---|---:|---:|---|
-| 0 · Фундамент | 22 | 47 | Каркас и dev-окружение закрыты; впереди `libs/platform`, шаблон сервиса, контракт, CI |
+| 0 · Фундамент | 35 | 47 | Каркас и dev-окружение закрыты; впереди `libs/platform`, шаблон сервиса, контракт, CI |
 | 1 · catalog-service | 0 | 31 | Не начата |
 | 2 · Шина и разрыв связей | 0 | 9 | Не начата |
 | 3 · ClickHouse | 0 | 8 | Не начата |
@@ -54,10 +54,10 @@
 [док. 9](09-task-graph.md).
 
 **Закрыто:** T001-T005, T008 (каркас монорепозитория и dev-окружение),
-T010 (`config.py`), T011 (`logging.py`), T012 (`errors.py`), T010-T022 — **весь `libs/platform`**, T030/T032/T033 (шаблон сервиса, helm-values, CI).
+T010 (`config.py`), T011 (`logging.py`), T012 (`errors.py`), T010-T022 — **весь `libs/platform`**, T030/T032/T033 (шаблон сервиса),
+T040-T052 — **контракт OpenAPI снят и заморожен**.
 
-**Сейчас в работе:** T031 и T034 — осталась только проверка сборки образа
-(`docker build` + `trivy`). Шаблон, генерация и все проверки кода уже зелёные.
+**Сейчас в работе:** T031/T034 (сборка образа) и T053 (`schemathesis`).
 
 **Дальше по критическому пути:** T030-T034 шаблон сервиса → фаза 1 (T100 catalog-service).
 
@@ -67,7 +67,7 @@ T010 (`config.py`), T011 (`logging.py`), T012 (`errors.py`), T010-T022 — **в�
 |---|---|
 | T006 Grafana + Prometheus + Loki + Tempo | Перед фазой 2. Для T013 не понадобилась — сквозная трасса проверена in-memory экспортёром спанов |
 | T007 `buf.yaml`, `buf.gen.yaml` | Вместе с первыми `.proto` — фаза 2 |
-| T040-T053 снятие контракта с Django | Параллельно `libs/platform`, работа идёт в `backend/` и ни от чего не зависит |
+
 | T060-T066 CI, Helm, ArgoCD, алиасы `/v1` | После T034: пайплайн параметризуется шаблоном сервиса |
 
 ---
@@ -129,19 +129,19 @@ T010 (`config.py`), T011 (`logging.py`), T012 (`errors.py`), T010-T022 — **в�
 
 | ID | Статус | Задача | Зависит | DoD |
 |---|---|---|---|---|
-| T040 | — | Установить `drf-spectacular`, зарегистрировать в `INSTALLED_APPS` и `DEFAULT_SCHEMA_CLASS` | T001 | `manage.py spectacular` отрабатывает (пусть и с предупреждениями) |
-| T041 `[P]` | — | `ProductPageSerializer` — ответ `{count,next,previous,results}` | T040 | — |
-| T042 `[P]` | — | `ParseEnqueuedSerializer` — ответ `{task_id,query,status}` | T040 | — |
-| T043 `[P]` | — | `PriceHistorySerializer` — ответ `{wb_id,points}` | T040 | — |
-| T044 `[P]` | — | `QueryComparisonSerializer` — ответ `{items:[{query,stats}]}` | T040 | — |
-| T045 `[P]` | — | `ErrorSerializer` — ответ `{detail}` для 400/404/502 | T040 | — |
-| T046 | — | `catalog/adapters/inbound/http/schema_params.py` — единый список query-параметров | T040 | — |
-| T047 | — | **Тест на расхождение**: объявленные в `schema_params` имена совпадают с ключами, которые читают `parse_product_filter` и `parse_ordering` | T046 | Добавление параметра в парсер без объявления роняет CI |
-| T048 | — | `@extend_schema` на вьюхи catalog (`ProductListView`, `ParseView`, `TaskStatusView`) | T041,T042,T046 | Логика вьюх не изменилась — диффом видно только аннотации |
-| T049 | — | `@extend_schema` на вьюхи analytics (`HistoryView`, `StatsView`) | T043,T044,T046 | — |
-| T050 | — | `@extend_schema` на `ExportView` — `OpenApiTypes.BINARY`, два content-type | T045 | — |
-| T051 | — | `@extend_schema` на вьюхи scheduling, notifications, accounts | T045 | — |
-| T052 | — | Сборка `contracts/openapi/v1.yaml` через `spectacular --validate --fail-on-warn` | T048-T051 | Команда проходит **без** предупреждений |
+| T040 | **готово** | Установить `drf-spectacular`, зарегистрировать в `INSTALLED_APPS` и `DEFAULT_SCHEMA_CLASS` | T001 | `manage.py spectacular` отрабатывает (пусть и с предупреждениями) |
+| T041 `[P]` | **готово** | `ProductPageSerializer` — ответ `{count,next,previous,results}` | T040 | **готово** |
+| T042 `[P]` | **готово** | `ParseEnqueuedSerializer` — ответ `{task_id,query,status}` | T040 | **готово** |
+| T043 `[P]` | **готово** | `PriceHistorySerializer` — ответ `{wb_id,points}` | T040 | **готово** |
+| T044 `[P]` | **готово** | `QueryComparisonSerializer` — ответ `{items:[{query,stats}]}` | T040 | **готово** |
+| T045 `[P]` | **готово** | `ErrorSerializer` — ответ `{detail}` для 400/404/502 | T040 | **готово** |
+| T046 | **готово** | `catalog/adapters/inbound/http/schema_params.py` — единый список query-параметров | T040 | **готово** |
+| T047 | **готово** | **Тест на расхождение**: объявленные в `schema_params` имена совпадают с ключами, которые читают `parse_product_filter` и `parse_ordering` | T046 | Добавление параметра в парсер без объявления роняет CI |
+| T048 | **готово** | `@extend_schema` на вьюхи catalog (`ProductListView`, `ParseView`, `TaskStatusView`) | T041,T042,T046 | Логика вьюх не изменилась — диффом видно только аннотации |
+| T049 | **готово** | `@extend_schema` на вьюхи analytics (`HistoryView`, `StatsView`) | T043,T044,T046 | — |
+| T050 | **готово** | `@extend_schema` на `ExportView` — `OpenApiTypes.BINARY`, два content-type | T045 | **готово** |
+| T051 | **готово** | `@extend_schema` на вьюхи scheduling, notifications, accounts | T045 | **готово** |
+| T052 | **готово** | Сборка `contracts/openapi/v1.yaml` через `spectacular --validate --fail-on-warn` | T048-T051 | Команда проходит **без** предупреждений |
 | T053 | — | Обвязка `schemathesis` поверх спеки, прогон против работающего Django | T052 | Ноль расхождений спеки и реализации |
 
 ### Блок 0.F — CI и алиасы

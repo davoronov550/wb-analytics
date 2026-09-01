@@ -1,0 +1,1419 @@
+openapi: 3.1.0
+info:
+  title: WB Analytics API
+  version: 1.0.0
+  description: Контракт API сервиса аналитики товаров Wildberries. Снят с Django-реализации
+    и заморожен на время миграции.
+paths:
+  /api/products/:
+    get:
+      operationId: products_list
+      summary: List products
+      parameters:
+      - in: query
+        name: max_price
+        schema:
+          type: number
+          format: double
+        description: Upper bound on the discounted price.
+      - in: query
+        name: max_rating
+        schema:
+          type: number
+          format: double
+        description: Upper bound on rating, within [0, 5].
+      - in: query
+        name: max_reviews
+        schema:
+          type: integer
+        description: Upper bound on the review count.
+      - in: query
+        name: min_price
+        schema:
+          type: number
+          format: double
+        description: Lower bound on the discounted price.
+      - in: query
+        name: min_rating
+        schema:
+          type: number
+          format: double
+        description: Lower bound on rating, within [0, 5].
+      - in: query
+        name: min_reviews
+        schema:
+          type: integer
+        description: Lower bound on the review count.
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - -name
+          - -price
+          - -rating
+          - -reviews_count
+          - -sale_price
+          - name
+          - price
+          - rating
+          - reviews_count
+          - sale_price
+        description: 'Sort field, optionally prefixed with ''-'' for descending. One
+          of: name, price, rating, reviews_count, sale_price.'
+      - in: query
+        name: page
+        schema:
+          type: integer
+        description: 1-based page number.
+      - in: query
+        name: page_size
+        schema:
+          type: integer
+        description: Rows per page, capped at 1000. The cap exists because the charts
+          are computed client-side from this response.
+      - in: query
+        name: query
+        schema:
+          type: string
+        description: Restrict to products collected for this search query.
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/parse/:
+    post:
+      operationId: collections_create
+      description: POST /api/parse/ — enqueue an async collection run, returns 202.
+      summary: Enqueue a collection run
+      tags:
+      - parse
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParseRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ParseRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ParseRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseEnqueued'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '502':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/tasks/{task_id}/:
+    get:
+      operationId: collections_retrieve
+      description: GET /api/tasks/{task_id}/ — async collection status.
+      summary: Collection run status
+      parameters:
+      - in: path
+        name: task_id
+        schema:
+          type: string
+        required: true
+      tags:
+      - tasks
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseJob'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/products/{wb_id}/history/:
+    get:
+      operationId: products_price_history
+      description: GET /api/products/{wb_id}/history/ — a product's price time-series.
+      summary: Price history of one product
+      parameters:
+      - in: path
+        name: wb_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceHistory'
+          description: ''
+  /api/stats/:
+    get:
+      operationId: stats_retrieve
+      description: 'One `query` returns a Stats object. Two or more return `{items:
+        [{query, stats}]}` — the same path answers with a different shape, which is
+        why both are declared.'
+      summary: Aggregates for a filtered set, or a comparison of queries
+      parameters:
+      - in: query
+        name: max_price
+        schema:
+          type: number
+          format: double
+        description: Upper bound on the discounted price.
+      - in: query
+        name: max_rating
+        schema:
+          type: number
+          format: double
+        description: Upper bound on rating, within [0, 5].
+      - in: query
+        name: max_reviews
+        schema:
+          type: integer
+        description: Upper bound on the review count.
+      - in: query
+        name: min_price
+        schema:
+          type: number
+          format: double
+        description: Lower bound on the discounted price.
+      - in: query
+        name: min_rating
+        schema:
+          type: number
+          format: double
+        description: Lower bound on rating, within [0, 5].
+      - in: query
+        name: min_reviews
+        schema:
+          type: integer
+        description: Lower bound on the review count.
+      - in: query
+        name: query
+        schema:
+          type: array
+          items:
+            type: string
+        description: Repeat to compare queries side by side.
+      tags:
+      - stats
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stats'
+          description: 'Single query: Stats. Repeated query: see the comparison schema.'
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/export/:
+    get:
+      operationId: export_download
+      description: |-
+        GET /api/export/?format=csv|xlsx — the filtered product set as a file.
+
+        Authenticated-only: this dumps the whole filtered catalogue in one request, so
+        it is an internal tool rather than part of the public catalogue read surface.
+        Throttled for the same reason.
+
+        ``format`` stays a plain query parameter because DRF's renderer-suffix lookup
+        is disabled project-wide (``URL_FORMAT_OVERRIDE = None``).
+      summary: Download the filtered set as a file
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - csv
+          - xlsx
+        description: Defaults to csv.
+      - in: query
+        name: max_price
+        schema:
+          type: number
+          format: double
+        description: Upper bound on the discounted price.
+      - in: query
+        name: max_rating
+        schema:
+          type: number
+          format: double
+        description: Upper bound on rating, within [0, 5].
+      - in: query
+        name: max_reviews
+        schema:
+          type: integer
+        description: Upper bound on the review count.
+      - in: query
+        name: min_price
+        schema:
+          type: number
+          format: double
+        description: Lower bound on the discounted price.
+      - in: query
+        name: min_rating
+        schema:
+          type: number
+          format: double
+        description: Lower bound on rating, within [0, 5].
+      - in: query
+        name: min_reviews
+        schema:
+          type: integer
+        description: Lower bound on the review count.
+      - in: query
+        name: ordering
+        schema:
+          type: string
+          enum:
+          - -name
+          - -price
+          - -rating
+          - -reviews_count
+          - -sale_price
+          - name
+          - price
+          - rating
+          - reviews_count
+          - sale_price
+        description: 'Sort field, optionally prefixed with ''-'' for descending. One
+          of: name, price, rating, reviews_count, sale_price.'
+      - in: query
+        name: query
+        schema:
+          type: string
+        description: Restrict to products collected for this search query.
+      tags:
+      - export
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            text/csv:
+              schema:
+                type: string
+                format: binary
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/schedules/:
+    get:
+      operationId: schedules_list
+      summary: List the caller's schedules
+      tags:
+      - schedules
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Schedule'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    post:
+      operationId: schedules_create
+      summary: Create a schedule
+      tags:
+      - schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ScheduleRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/schedules/{schedule_id}/:
+    patch:
+      operationId: schedules_set_active
+      summary: Enable or disable a schedule
+      parameters:
+      - in: path
+        name: schedule_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - schedules
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedScheduleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedScheduleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedScheduleRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    delete:
+      operationId: schedules_destroy
+      summary: Delete a schedule
+      parameters:
+      - in: path
+        name: schedule_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - schedules
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/alerts/:
+    get:
+      operationId: alert_rules_list
+      summary: List the caller's alert rules
+      tags:
+      - alerts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AlertRule'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    post:
+      operationId: alert_rules_create
+      summary: Create an alert rule
+      tags:
+      - alerts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateAlertRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertRule'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/alerts/{rule_id}/:
+    delete:
+      operationId: alert_rules_destroy
+      summary: Delete an alert rule
+      parameters:
+      - in: path
+        name: rule_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - alerts
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/auth/register/:
+    post:
+      operationId: auth_register
+      summary: Create an account
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registered'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: Login. Unthrottled, this accepted unlimited password guesses.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPairRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/auth/google/:
+    post:
+      operationId: auth_google
+      description: Exchange a Google ID token for our JWT, provisioning the account
+        if new.
+      summary: Exchange a Google ID token for a session
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleAuthRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/GoogleAuthRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/GoogleAuthRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/auth/refresh/:
+    post:
+      operationId: auth_refresh_create
+      description: Refresh. Also a credential exchange, so it shares the same budget.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefreshRequest'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout
+      description: |-
+        Revoke the caller's refresh token.
+
+        The access token itself is stateless and simply expires (30 minutes), but the
+        refresh token is what keeps a session alive, so blacklisting it is what
+        actually ends the session. A client that no longer holds its refresh token
+        still gets a success: it has nothing left to revoke.
+      summary: Revoke the caller's refresh token
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LogoutRequestRequest'
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '205':
+          description: No response body
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/auth/me/:
+    get:
+      operationId: auth_me
+      summary: The caller's own account
+      tags:
+      - auth
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/saved-searches/:
+    get:
+      operationId: saved_searches_list
+      summary: List the caller's saved searches
+      tags:
+      - saved-searches
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SavedSearch'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+    post:
+      operationId: saved_searches_create
+      summary: Save a set of filters under a name
+      tags:
+      - saved-searches
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavedSearchRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SavedSearchRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SavedSearchRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavedSearch'
+          description: ''
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+  /api/saved-searches/{saved_id}/:
+    delete:
+      operationId: saved_searches_destroy
+      summary: Delete a saved search
+      parameters:
+      - in: path
+        name: saved_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - saved-searches
+      security:
+      - jwtAuth: []
+      - cookieAuth: []
+      responses:
+        '204':
+          description: No response body
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+components:
+  schemas:
+    Account:
+      type: object
+      description: The caller's own account, as `/auth/me/` and Google sign-in return
+        it.
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type:
+          - string
+          - 'null'
+          format: email
+        providers:
+          type: array
+          items:
+            type: string
+      required:
+      - email
+      - id
+      - providers
+      - username
+    AlertConditionRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/KindEnum'
+        value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+      required:
+      - kind
+      - value
+    AlertRule:
+      type: object
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+        value:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        channel:
+          type: string
+        target_wb_id:
+          type:
+          - integer
+          - 'null'
+        target_query:
+          type:
+          - string
+          - 'null'
+        active:
+          type: boolean
+      required:
+      - active
+      - channel
+      - id
+      - kind
+      - target_query
+      - target_wb_id
+      - value
+    AlertTargetRequest:
+      type: object
+      description: 'What the rule watches: one product, or every product of a query.'
+      properties:
+        wb_id:
+          type:
+          - integer
+          - 'null'
+        query:
+          type:
+          - string
+          - 'null'
+          minLength: 1
+          maxLength: 200
+    ChannelEnum:
+      enum:
+      - email
+      - telegram
+      type: string
+      description: |-
+        * `email` - email
+        * `telegram` - telegram
+    CreateAlertRequest:
+      type: object
+      description: '`POST /api/alerts/` body — nested, and validated by hand in the
+        view.'
+      properties:
+        target:
+          $ref: '#/components/schemas/AlertTargetRequest'
+        condition:
+          $ref: '#/components/schemas/AlertConditionRequest'
+        channel:
+          $ref: '#/components/schemas/ChannelEnum'
+      required:
+      - channel
+      - condition
+      - target
+    Error:
+      type: object
+      description: |-
+        The `{"detail": ...}` body every error path returns today.
+
+        Named here rather than per context: the exception handler is shared, so
+        one definition keeps the contract honest about that.
+      properties:
+        detail:
+          type: string
+      required:
+      - detail
+    GoogleAuthRequestRequest:
+      type: object
+      properties:
+        id_token:
+          type: string
+          minLength: 1
+      required:
+      - id_token
+    KindEnum:
+      enum:
+      - abs_below
+      - pct_drop
+      type: string
+      description: |-
+        * `abs_below` - abs_below
+        * `pct_drop` - pct_drop
+    LogoutRequestRequest:
+      type: object
+      description: |-
+        `refresh` is optional: a client that has already lost it still gets 205,
+        because there is nothing left to revoke.
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+    ParseEnqueued:
+      type: object
+      description: '`POST /api/parse/` — 202 with the accepted job, not the finished
+        one.'
+      properties:
+        task_id:
+          type: string
+        query:
+          type: string
+        status:
+          type: string
+      required:
+      - query
+      - status
+      - task_id
+    ParseJob:
+      type: object
+      properties:
+        task_id:
+          type: string
+        query:
+          type: string
+        status:
+          type: string
+        created:
+          type: integer
+        updated:
+          type: integer
+        collected_count:
+          type: integer
+        error:
+          type:
+          - string
+          - 'null'
+        finished_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - collected_count
+      - created
+      - error
+      - finished_at
+      - query
+      - status
+      - task_id
+      - updated
+    ParseRequestRequest:
+      type: object
+      description: '`POST /api/parse/` body. Validated by hand in the view, described
+        here.'
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 200
+        max_pages:
+          type: integer
+          maximum: 20
+          minimum: 1
+          description: Defaults to the server setting.
+      required:
+      - query
+    PatchedScheduleRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+        spec:
+          type: string
+          minLength: 1
+        active:
+          type: boolean
+          default: true
+    PriceHistory:
+      type: object
+      description: '`GET /api/products/{wb_id}/history/` — the price time series.'
+      properties:
+        wb_id:
+          type: integer
+        points:
+          type: array
+          items:
+            $ref: '#/components/schemas/Snapshot'
+      required:
+      - points
+      - wb_id
+    ProductPage:
+      type: object
+      description: '`GET /api/products/` — DRF''s page envelope, assembled manually.'
+      properties:
+        count:
+          type: integer
+        next:
+          type:
+          - string
+          - 'null'
+        previous:
+          type:
+          - string
+          - 'null'
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductView'
+      required:
+      - count
+      - next
+      - previous
+      - results
+    ProductView:
+      type: object
+      properties:
+        wb_id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        sale_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        discount_abs:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        discount_pct:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,4}(?:\.\d{0,2})?$
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,1})?$
+        reviews_count:
+          type: integer
+        query:
+          type:
+          - string
+          - 'null'
+        updated_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+      required:
+      - discount_abs
+      - discount_pct
+      - name
+      - price
+      - query
+      - rating
+      - reviews_count
+      - sale_price
+      - updated_at
+      - wb_id
+    RegisterRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 6
+      required:
+      - password
+      - username
+    Registered:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+      required:
+      - id
+      - username
+    SavedSearch:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        query:
+          type: string
+          maxLength: 200
+        filters: {}
+      required:
+      - id
+      - name
+      - query
+    SavedSearchRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        query:
+          type: string
+          minLength: 1
+          maxLength: 200
+        filters: {}
+      required:
+      - name
+      - query
+    Schedule:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        query:
+          type: string
+        spec:
+          type: string
+        interval_seconds:
+          type: integer
+          readOnly: true
+        active:
+          type: boolean
+          default: true
+        last_run_at:
+          type:
+          - string
+          - 'null'
+          format: date-time
+          readOnly: true
+      required:
+      - id
+      - interval_seconds
+      - last_run_at
+      - query
+      - spec
+    ScheduleRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          minLength: 1
+        spec:
+          type: string
+          minLength: 1
+        active:
+          type: boolean
+          default: true
+      required:
+      - query
+      - spec
+    Snapshot:
+      type: object
+      properties:
+        captured_at:
+          type: string
+          format: date-time
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        sale_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        rating:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,1}(?:\.\d{0,1})?$
+      required:
+      - captured_at
+      - price
+      - rating
+      - sale_price
+    Stats:
+      type: object
+      properties:
+        count:
+          type: integer
+        avg_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        median_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        price_stddev:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        avg_discount_abs:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        discount_share:
+          type: number
+          format: double
+        top_by_reviews:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopProduct'
+      required:
+      - avg_discount_abs
+      - avg_price
+      - count
+      - discount_share
+      - median_price
+      - price_stddev
+      - top_by_reviews
+    TokenObtainPair:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - refresh
+    TokenObtainPairRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - password
+      - username
+    TokenPair:
+      type: object
+      properties:
+        access:
+          type: string
+        refresh:
+          type: string
+        user:
+          $ref: '#/components/schemas/Account'
+      required:
+      - access
+      - refresh
+      - user
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefreshRequest:
+      type: object
+      properties:
+        refresh:
+          type: string
+          minLength: 1
+      required:
+      - refresh
+    TopProduct:
+      type: object
+      properties:
+        wb_id:
+          type: integer
+        name:
+          type: string
+        reviews_count:
+          type: integer
+      required:
+      - name
+      - reviews_count
+      - wb_id
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

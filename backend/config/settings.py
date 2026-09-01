@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "rest_framework_simplejwt.token_blacklist",  # makes refresh tokens revocable
+    "drf_spectacular",  # OpenAPI 3.1 generation (migration contract)
     # --- bounded-context persistence apps ---
     "catalog.adapters.outbound.persistence.apps.CatalogPersistenceConfig",
     "catalog.adapters.inbound.cli.apps.CatalogCliConfig",  # management commands
@@ -165,6 +166,9 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",  # catalog reads are public
     ],
     "EXCEPTION_HANDLER": "catalog.adapters.inbound.http.exceptions.exception_handler",
+    # The generated schema is the migration contract: every route that moves to
+    # FastAPI is checked against it (док. 5, §0.1).
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     # `?format=` is a real parameter of /api/export/ (csv|xlsx), not a DRF renderer
     # suffix. Format suffixes are not used anywhere in this project.
     "URL_FORMAT_OVERRIDE": None,
@@ -174,6 +178,30 @@ REST_FRAMEWORK = {
         "auth": os.environ.get("THROTTLE_AUTH", "10/min"),
         "export": os.environ.get("THROTTLE_EXPORT", "10/min"),
     },
+}
+
+# --- OpenAPI schema (drf-spectacular) ---
+# Снимок контракта нынешнего API. Он замораживается и служит эталоном: любое
+# расхождение реализации на FastAPI с этим файлом — красный CI.
+SPECTACULAR_SETTINGS = {
+    "TITLE": "WB Analytics API",
+    "VERSION": "1.0.0",
+    "DESCRIPTION": (
+        "Контракт API сервиса аналитики товаров Wildberries. "
+        "Снят с Django-реализации и заморожен на время миграции."
+    ),
+    # Схема отдаётся отдельным файлом, а не эндпоинтом: сервер схемы в проде
+    # не нужен, а маршрут /api/schema/ был бы расхождением с контрактом.
+    "SERVE_INCLUDE_SCHEMA": False,
+    # OpenAPI 3.1: его понимает openapi-typescript, из которого генерируются
+    # типы фронтенда.
+    "OAS_VERSION": "3.1.0",
+    # Пути описываются вручную через @extend_schema; догадки генератора о
+    # типах параметров нам не нужны — расхождение должно падать, а не
+    # разрешаться эвристикой.
+    "SCHEMA_PATH_PREFIX": "/api",
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SORT_OPERATIONS": False,
 }
 
 # --- CORS (frontend dev origin) ---

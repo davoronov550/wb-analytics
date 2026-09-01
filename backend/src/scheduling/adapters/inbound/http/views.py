@@ -8,12 +8,14 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from catalog.adapters.inbound.http.serializers import ErrorSerializer
 from scheduling.adapters.inbound.http.serializers import ScheduleSerializer
 from scheduling.composition import container
 
@@ -28,10 +30,21 @@ def _owned_or_none(schedule_id: int, owner_id: int):
 class ScheduleListView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="schedules_list",
+        summary="List the caller's schedules",
+        responses={200: ScheduleSerializer(many=True), 401: ErrorSerializer},
+    )
     def get(self, request: Request) -> Response:
         schedules = container.build_manage_schedules().list(owner_id=request.user.id)
         return Response(ScheduleSerializer(schedules, many=True).data)
 
+    @extend_schema(
+        operation_id="schedules_create",
+        summary="Create a schedule",
+        request=ScheduleSerializer,
+        responses={201: ScheduleSerializer, 400: ErrorSerializer, 401: ErrorSerializer},
+    )
     def post(self, request: Request) -> Response:
         data = request.data if isinstance(request.data, Mapping) else {}
         query = data.get("query")
@@ -53,6 +66,13 @@ class ScheduleListView(APIView):
 class ScheduleDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="schedules_set_active",
+        summary="Enable or disable a schedule",
+        request=ScheduleSerializer,
+        # 404 rather than 403 for someone else's id: 403 would confirm it exists.
+        responses={200: ScheduleSerializer, 400: ErrorSerializer, 404: ErrorSerializer},
+    )
     def patch(self, request: Request, schedule_id: int) -> Response:
         if _owned_or_none(schedule_id, request.user.id) is None:
             return Response({"detail": "Schedule not found."}, status=404)
@@ -62,6 +82,11 @@ class ScheduleDetailView(APIView):
         schedule = container.build_manage_schedules().set_active(schedule_id, active)
         return Response(ScheduleSerializer(schedule).data)
 
+    @extend_schema(
+        operation_id="schedules_destroy",
+        summary="Delete a schedule",
+        responses={204: None, 404: ErrorSerializer},
+    )
     def delete(self, request: Request, schedule_id: int) -> Response:
         if _owned_or_none(schedule_id, request.user.id) is None:
             return Response({"detail": "Schedule not found."}, status=404)

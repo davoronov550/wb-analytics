@@ -5,23 +5,39 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 
+from drf_spectacular.utils import extend_schema
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from notifications.adapters.inbound.http.serializers import AlertRuleSerializer
+from catalog.adapters.inbound.http.serializers import ErrorSerializer
+from notifications.adapters.inbound.http.serializers import (
+    AlertRuleSerializer,
+    CreateAlertSerializer,
+)
 from notifications.composition import container
 
 
 class AlertListView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="alert_rules_list",
+        summary="List the caller's alert rules",
+        responses={200: AlertRuleSerializer(many=True), 401: ErrorSerializer},
+    )
     def get(self, request: Request) -> Response:
         rules = container.build_manage_alerts().list(request.user.id)
         return Response(AlertRuleSerializer(rules, many=True).data)
 
+    @extend_schema(
+        operation_id="alert_rules_create",
+        summary="Create an alert rule",
+        request=CreateAlertSerializer,
+        responses={201: AlertRuleSerializer, 400: ErrorSerializer, 401: ErrorSerializer},
+    )
     def post(self, request: Request) -> Response:
         data = request.data if isinstance(request.data, Mapping) else {}
         target = data.get("target") or {}
@@ -47,6 +63,11 @@ class AlertListView(APIView):
 class AlertDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="alert_rules_destroy",
+        summary="Delete an alert rule",
+        responses={204: None, 404: ErrorSerializer},
+    )
     def delete(self, request: Request, rule_id: int) -> Response:
         deleted = container.build_manage_alerts().delete(request.user.id, rule_id)
         return Response(status=204 if deleted else 404)

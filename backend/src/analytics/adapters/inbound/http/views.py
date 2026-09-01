@@ -3,16 +3,25 @@
 from __future__ import annotations
 
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.throttling import ScopedRateThrottle
 from rest_framework.views import APIView
 
-from analytics.adapters.inbound.http.serializers import SnapshotSerializer, StatsSerializer
+from analytics.adapters.inbound.http.serializers import (
+    PriceHistorySerializer,
+    QueryComparisonSerializer,
+    SnapshotSerializer,
+    StatsSerializer,
+)
 from analytics.adapters.outbound.export.writers import build_xlsx, iter_csv
 from analytics.composition import container
 from catalog.adapters.inbound.http.request_filters import parse_ordering, parse_product_filter
+from catalog.adapters.inbound.http.schema_params import ANALYTICS_PARAMETERS, ORDERING_PARAMETERS
+from catalog.adapters.inbound.http.serializers import ErrorSerializer
 from catalog.application.errors import InvalidFilter
 
 _XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
@@ -21,6 +30,11 @@ _XLSX_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 class HistoryView(APIView):
     """GET /api/products/{wb_id}/history/ — a product's price time-series."""
 
+    @extend_schema(
+        operation_id="products_price_history",
+        summary="Price history of one product",
+        responses={200: PriceHistorySerializer},
+    )
     def get(self, request: Request, wb_id: int) -> Response:
         snapshots = container.build_list_history().execute(wb_id)
         return Response({"wb_id": wb_id, "points": SnapshotSerializer(snapshots, many=True).data})
@@ -34,6 +48,34 @@ class StatsView(APIView):
     other filters.
     """
 
+    @extend_schema(
+        operation_id="stats_retrieve",
+        summary="Aggregates for a filtered set, or a comparison of queries",
+        description=(
+            "One `query` returns a Stats object. Two or more return "
+            "`{items: [{query, stats}]}` — the same path answers with a "
+            "different shape, which is why both are declared."
+        ),
+        parameters=[
+            *ANALYTICS_PARAMETERS,
+            OpenApiParameter(
+                name="query",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                many=True,
+                description="Repeat to compare queries side by side.",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                # Two shapes behind one status code. A client generated from a
+                # schema that named only the first breaks on the second query.
+                response=StatsSerializer,
+                description="Single query: Stats. Repeated query: see the comparison schema.",
+            ),
+            400: ErrorSerializer,
+        },
+    )
     def get(self, request: Request) -> Response:
         product_filter = parse_product_filter(request.query_params)  # InvalidFilter → 400
         queries = request.query_params.getlist("query")
@@ -66,6 +108,30 @@ class ExportView(APIView):
     throttle_classes = [ScopedRateThrottle]
     throttle_scope = "export"
 
+    @extend_schema(
+        operation_id="export_download",
+        summary="Download the filtered set as a file",
+        parameters=[
+            *ANALYTICS_PARAMETERS,
+            *ORDERING_PARAMETERS,
+            OpenApiParameter(
+                name="format",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                enum=["csv", "xlsx"],
+                description="Defaults to csv.",
+            ),
+        ],
+        responses={
+            # A file, not JSON. Declared as binary with both content types so a
+            # generated client reads bytes instead of trying to parse them.
+            (200, "text/csv"): OpenApiTypes.BINARY,
+            (200, _XLSX_TYPE): OpenApiTypes.BINARY,
+            400: ErrorSerializer,
+            401: ErrorSerializer,
+            429: ErrorSerializer,
+        },
+    )
     def get(self, request: Request) -> HttpResponse:
         try:
             product_filter = parse_product_filter(request.query_params)

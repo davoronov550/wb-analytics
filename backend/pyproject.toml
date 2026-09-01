@@ -25,6 +25,9 @@ dependencies = [
     "openpyxl>=3.1",  # XLSX export
     "google-auth>=2.0",  # verify Google ID tokens (sign-in)
     "requests>=2.31",                        # HTTP transport for google-auth cert fetch
+    # Снимает OpenAPI 3.1 с работающего DRF — эталон, по которому
+    # проверяется каждый переносимый маршрут (док. 5, §0.1).
+    "drf-spectacular>=0.28",
 ]
 
 [project.optional-dependencies]
