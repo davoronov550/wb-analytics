@@ -70,6 +70,8 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
 # 127.0.0.1 rather than localhost in the probe above: the app binds 0.0.0.0
 # (IPv4 only), while localhost resolves to ::1 first inside a container — the
 # check would report connection refused against a perfectly healthy service.
-CMD ["uvicorn", "{{ cookiecutter.package_name }}.main:app", \
+# `--factory`: the module has no import-time `app`, because building one
+# requires a configured environment and importing a module must not.
+CMD ["uvicorn", "{{ cookiecutter.package_name }}.main:create_app", "--factory", \
      "--host", "0.0.0.0", "--port", "{{ cookiecutter.http_port }}", \
      "--loop", "uvloop", "--http", "httptools", "--no-access-log"]

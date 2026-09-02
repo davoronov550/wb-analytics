@@ -168,6 +168,23 @@ class TestDockerfile:
         assert "127.0.0.1" in dockerfile
         assert "localhost:" not in dockerfile
 
+    def test_entrypoint_matches_what_the_module_exposes(self, generated: Path) -> None:
+        """The gap this closes: the service passed every other check and
+        produced an image that could not start.
+
+        `main.py` deliberately has no import-time `app`, so a CMD naming
+        `main:app` fails at container start — after the build succeeded, after
+        the tests passed, in the one place nothing was looking. Asserting the
+        two agree is cheaper than finding out from a crash loop.
+        """
+        dockerfile = (generated / "Dockerfile").read_text(encoding="utf-8")
+        module = (generated / "src" / "probe" / "main.py").read_text(encoding="utf-8")
+
+        assert "--factory" in dockerfile
+        assert "main:create_app" in dockerfile
+        assert "main:app" not in dockerfile
+        assert "def create_app(" in module  # the factory the CMD names exists
+
     def test_lockfile_drift_fails_the_build(self, generated: Path) -> None:
         """`--locked` beats resolving something the tests never saw."""
         assert "--locked" in (generated / "Dockerfile").read_text(encoding="utf-8")
