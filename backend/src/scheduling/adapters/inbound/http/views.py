@@ -71,7 +71,12 @@ class ScheduleDetailView(APIView):
         summary="Enable or disable a schedule",
         request=ScheduleSerializer,
         # 404 rather than 403 for someone else's id: 403 would confirm it exists.
-        responses={200: ScheduleSerializer, 400: ErrorSerializer, 404: ErrorSerializer},
+        responses={
+            200: ScheduleSerializer,
+            400: ErrorSerializer,
+            401: ErrorSerializer,
+            404: ErrorSerializer,
+        },
     )
     def patch(self, request: Request, schedule_id: int) -> Response:
         if _owned_or_none(schedule_id, request.user.id) is None:
@@ -85,7 +90,7 @@ class ScheduleDetailView(APIView):
     @extend_schema(
         operation_id="schedules_destroy",
         summary="Delete a schedule",
-        responses={204: None, 404: ErrorSerializer},
+        responses={204: None, 401: ErrorSerializer, 404: ErrorSerializer},
     )
     def delete(self, request: Request, schedule_id: int) -> Response:
         if _owned_or_none(schedule_id, request.user.id) is None:

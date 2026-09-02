@@ -71,6 +71,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "config.security_headers.ContentSecurityPolicyMiddleware",
+    # Последний в цепочке: тело читается один раз и только для /api/,
+    # поэтому проверка не касается админки и статики.
+    "catalog.adapters.inbound.http.nul_bytes.RejectNulBytesMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -157,6 +160,14 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": [
         "django_filters.rest_framework.DjangoFilterBackend",
         "rest_framework.filters.OrderingFilter",
+    ],
+    # NUL (0x00) не хранится ни в text, ни в jsonb PostgreSQL, а JSON его
+    # переносит как U+0000. Парсер отбраковывает его после разбора — до того,
+    # как значение дойдёт до INSERT и превратится в 500.
+    "DEFAULT_PARSER_CLASSES": [
+        "catalog.adapters.inbound.http.nul_bytes.NulRejectingJSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
     ],
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",

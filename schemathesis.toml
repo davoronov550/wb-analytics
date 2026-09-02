@@ -1,0 +1,26 @@
+# Обвязка контрактной проверки (T053).
+#
+# Прогон: tools/contract-check.sh — он поднимает Django на замороженной спеке
+# и запускает schemathesis против него.
+#
+# Аутентификация объявлена динамической, а не заголовком `-H`: схема описывает
+# две альтернативы, `jwtAuth` и `cookieAuth`, и при сыром заголовке фаза
+# покрытия считает вторую неудовлетворённой и отмечает как отказ каждый
+# успешный ответ защищённой операции. Привязка к имени схемы говорит
+# schemathesis, какая именно альтернатива закрыта.
+[auth.dynamic.openapi.jwtAuth]
+path = "/api/auth/login/"
+payload = { username = "${ST_USERNAME}", password = "${ST_PASSWORD}" }
+extract_selector = "/access"
+# Про предупреждение «authentication stopped working mid-run»: фаззер вызывает
+# POST /api/auth/logout/ и отзывает собственный токен. Перевыпуск по 401 —
+# умолчание schemathesis (DEFAULT_RETRY_ON), поэтому прогон продолжается сам;
+# предупреждение ожидаемо и отказом не является.
+
+[generation]
+max-examples = 30
+
+[output.sanitization]
+# Токен в отчёте не нужен, а без санитизации команда `curl` из отчёта
+# воспроизводима без правок.
+enabled = true

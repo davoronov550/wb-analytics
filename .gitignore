@@ -44,3 +44,6 @@ libs/grpc_stubs/
 
 # Локальная конфигурация dev-окружения (шаблон — deploy/compose/.env.example).
 deploy/compose/.env
+
+# Кэш schemathesis (T053) — воспроизводится прогоном.
+.schemathesis/

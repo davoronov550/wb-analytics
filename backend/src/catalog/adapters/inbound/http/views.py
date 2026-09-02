@@ -25,6 +25,12 @@ from catalog.composition import container
 
 _MAX_PAGE_SIZE = 1000
 _MAX_PARSE_PAGES = 20
+# Width of ParseJobModel.query. Checked here because PostgreSQL raises
+# DataError at INSERT otherwise, after the request was already accepted as
+# valid — the client gets a 500 for input the API should have refused.
+# `test_malformed_input` ties this to the column so widening one without the
+# other fails a test instead of a request.
+_MAX_PARSE_QUERY = 200
 
 
 def _positive_int(params: Mapping, key: str, default: int, maximum: int | None = None) -> int:
@@ -72,7 +78,12 @@ class ParseView(APIView):
     @extend_schema(
         operation_id="collections_create",
         summary="Enqueue a collection run",
-        request=ParseRequestSerializer,
+        # JSON only. `COMPONENT_SPLIT_REQUEST` otherwise advertises the two
+        # form encodings as well, and neither can carry this body: a nested
+        # object arrives as the string "{'kind': ...}" and a null as the
+        # string "None". The API answers 400, correctly — the schema was
+        # promising a media type that cannot work.
+        request={"application/json": ParseRequestSerializer},
         responses={
             202: ParseEnqueuedSerializer,
             400: ErrorSerializer,
@@ -85,6 +96,8 @@ class ParseView(APIView):
         query = data.get("query")
         if not isinstance(query, str) or not query.strip():
             raise InvalidFilter("query is required")
+        if len(query.strip()) > _MAX_PARSE_QUERY:
+            raise InvalidFilter(f"query must be at most {_MAX_PARSE_QUERY} characters")
         max_pages = self._parse_max_pages(data.get("max_pages"))
 
         job = container.build_enqueue_collection().execute(query.strip(), max_pages)

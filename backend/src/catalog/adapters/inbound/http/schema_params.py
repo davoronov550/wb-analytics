@@ -43,23 +43,36 @@ PAGINATION_PARAM_NAMES: Final[frozenset[str]] = frozenset({"page", "page_size"})
 
 
 def _query(
-    name: str, type_: OpenApiTypes, description: str, **extra: object
+    name: str, type_: OpenApiTypes | dict[str, object], description: str, **extra: object
 ) -> OpenApiParameter:
     return OpenApiParameter(
         name=name, type=type_, location=OpenApiParameter.QUERY, description=description, **extra
     )
 
 
+# Bounds the parsers already enforce. Declaring them is not decoration: a schema
+# that omits them says `page=0` is valid input, so every client generated from
+# it — and every contract test — treats the resulting 400 as a server defect.
+# `schemathesis` reports exactly that, which is how these came to be written.
+#
+# Cross-parameter rules (`min_price <= max_price` and the two like it) have no
+# expression in an OpenAPI parameter schema and stay 400-only; see the note in
+# `docs/migration/02-functional-parity.md`.
+_PRICE = {"type": "number", "format": "double", "minimum": 0}
+_RATING = {"type": "number", "format": "double", "minimum": 0, "maximum": 5}
+_COUNT = {"type": "integer", "minimum": 0}
+
+
 #: Price bounds apply to `sale_price` — what the buyer pays, not the list
 #: price. Documented because the name does not say it and the difference is
 #: visible to anyone filtering by price.
 FILTER_PARAMETERS: Final[list[OpenApiParameter]] = [
-    _query("min_price", OpenApiTypes.DECIMAL, "Lower bound on the discounted price."),
-    _query("max_price", OpenApiTypes.DECIMAL, "Upper bound on the discounted price."),
-    _query("min_rating", OpenApiTypes.DECIMAL, "Lower bound on rating, within [0, 5]."),
-    _query("max_rating", OpenApiTypes.DECIMAL, "Upper bound on rating, within [0, 5]."),
-    _query("min_reviews", OpenApiTypes.INT, "Lower bound on the review count."),
-    _query("max_reviews", OpenApiTypes.INT, "Upper bound on the review count."),
+    _query("min_price", _PRICE, "Lower bound on the discounted price."),
+    _query("max_price", _PRICE, "Upper bound on the discounted price."),
+    _query("min_rating", _RATING, "Lower bound on rating."),
+    _query("max_rating", _RATING, "Upper bound on rating."),
+    _query("min_reviews", _COUNT, "Lower bound on the review count."),
+    _query("max_reviews", _COUNT, "Upper bound on the review count."),
     _query("query", OpenApiTypes.STR, "Restrict to products collected for this search query."),
 ]
 
@@ -74,12 +87,16 @@ ORDERING_PARAMETERS: Final[list[OpenApiParameter]] = [
 ]
 
 PAGINATION_PARAMETERS: Final[list[OpenApiParameter]] = [
-    _query("page", OpenApiTypes.INT, "1-based page number."),
+    _query("page", {"type": "integer", "minimum": 1}, "1-based page number."),
     _query(
         "page_size",
-        OpenApiTypes.INT,
-        "Rows per page, capped at 1000. The cap exists because the charts are "
-        "computed client-side from this response.",
+        # No `maximum`: a larger value is clamped to 1000, not refused. Declaring
+        # the cap here would say the API rejects it, and a contract test would
+        # then read the accepted request as a missing validation.
+        {"type": "integer", "minimum": 1},
+        "Rows per page. Values above 1000 are clamped to 1000 rather than "
+        "refused; the cap exists because the charts are computed client-side "
+        "from this response.",
     ),
 ]
 

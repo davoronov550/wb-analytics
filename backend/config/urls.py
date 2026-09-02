@@ -10,6 +10,10 @@ from django.urls import include, path
 
 from config.health import health_view
 
+# Unmatched paths under /api/ answer with an envelope instead of Django's
+# HTML page — see the module docstring for why the HTML one is reachable.
+handler404 = "catalog.adapters.inbound.http.not_found.not_found"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/health/", health_view, name="health"),

@@ -40,6 +40,7 @@ dev = [
     # extras, которые им действительно нужны — api-gateway не тянет ClickHouse.
     "wb-platform[db,kafka,grpc,redis,http,web,otel,auth]",
     "cookiecutter>=2.6",
+    "schemathesis>=4.0",
 ]
 
 [tool.uv.sources]

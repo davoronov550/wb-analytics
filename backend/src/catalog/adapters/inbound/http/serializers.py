@@ -41,13 +41,50 @@ class ParseJobSerializer(serializers.Serializer):
 
 
 class ErrorSerializer(serializers.Serializer):
-    """The `{"detail": ...}` body every error path returns today.
+    """The `{"detail": ...}` body the shared exception handler returns.
 
-    Named here rather than per context: the exception handler is shared, so
-    one definition keeps the contract honest about that.
+    Not the only error body in the API: DRF answers its own serializer
+    validation with a field-keyed map instead, and the handler passes that
+    through untouched. The docstring here used to claim this shape covered
+    "every error path", which is what a contract test disproved — see
+    `FIELD_ERRORS_SCHEMA` below and `VALIDATION_ERROR_RESPONSE`.
     """
 
     detail = serializers.CharField()
+
+
+#: DRF's own validation body: `{"username": ["Обязательное поле."]}`. Declared
+#: as a raw schema because the shape is a free-form map, which a Serializer
+#: expresses as a named field rather than as `additionalProperties`.
+FIELD_ERRORS_SCHEMA: dict[str, object] = {
+    "type": "object",
+    # Both shapes occur: DRF wraps its own messages in a list, while code that
+    # raises `ValidationError({"username": "already taken"})` by hand leaves the
+    # string bare. Declaring only the list form is what a contract run caught.
+    "additionalProperties": {
+        "oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]
+    },
+    "description": "Field-keyed validation errors, as DRF renders them.",
+}
+
+#: What a 400 actually looks like on the endpoints that run a DRF serializer:
+#: either envelope, depending on which layer rejected the request. Both are
+#: declared because a client that expects only the first reads a field-keyed
+#: body as a missing `detail` and shows the user nothing.
+VALIDATION_ERROR_SCHEMA: dict[str, object] = {
+    # `anyOf`, not `oneOf`: `{"detail": "..."}` satisfies both branches at once,
+    # since the field-keyed map allows a bare string value. Under `oneOf` that
+    # is a validation failure ("valid under more than one"), so the union
+    # rejected the single most common error body in the API.
+    "anyOf": [
+        {
+            "type": "object",
+            "properties": {"detail": {"type": "string"}},
+            "required": ["detail"],
+        },
+        FIELD_ERRORS_SCHEMA,
+    ]
+}
 
 
 class ProductPageSerializer(serializers.Serializer):
@@ -72,5 +109,11 @@ class ParseRequestSerializer(serializers.Serializer):
 
     query = serializers.CharField(max_length=200)
     max_pages = serializers.IntegerField(
-        required=False, min_value=1, max_value=20, help_text="Defaults to the server setting."
+        required=False,
+        # The view reads None and "" as "use the server default", so a schema
+        # that forbids null describes a rejection the API does not perform.
+        allow_null=True,
+        min_value=1,
+        max_value=20,
+        help_text="Defaults to the server setting.",
     )

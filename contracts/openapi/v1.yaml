@@ -15,34 +15,42 @@ paths:
         schema:
           type: number
           format: double
+          minimum: 0
         description: Upper bound on the discounted price.
       - in: query
         name: max_rating
         schema:
           type: number
           format: double
-        description: Upper bound on rating, within [0, 5].
+          minimum: 0
+          maximum: 5
+        description: Upper bound on rating.
       - in: query
         name: max_reviews
         schema:
           type: integer
+          minimum: 0
         description: Upper bound on the review count.
       - in: query
         name: min_price
         schema:
           type: number
           format: double
+          minimum: 0
         description: Lower bound on the discounted price.
       - in: query
         name: min_rating
         schema:
           type: number
           format: double
-        description: Lower bound on rating, within [0, 5].
+          minimum: 0
+          maximum: 5
+        description: Lower bound on rating.
       - in: query
         name: min_reviews
         schema:
           type: integer
+          minimum: 0
         description: Lower bound on the review count.
       - in: query
         name: ordering
@@ -65,13 +73,16 @@ paths:
         name: page
         schema:
           type: integer
+          minimum: 1
         description: 1-based page number.
       - in: query
         name: page_size
         schema:
           type: integer
-        description: Rows per page, capped at 1000. The cap exists because the charts
-          are computed client-side from this response.
+          minimum: 1
+        description: Rows per page. Values above 1000 are clamped to 1000 rather than
+          refused; the cap exists because the charts are computed client-side from
+          this response.
       - in: query
         name: query
         schema:
@@ -106,12 +117,6 @@ paths:
       requestBody:
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/ParseRequestRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ParseRequestRequest'
-          multipart/form-data:
             schema:
               $ref: '#/components/schemas/ParseRequestRequest'
         required: true
@@ -198,6 +203,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/PriceHistory'
           description: ''
+        '404':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
   /api/stats/:
     get:
       operationId: stats_retrieve
@@ -211,34 +222,42 @@ paths:
         schema:
           type: number
           format: double
+          minimum: 0
         description: Upper bound on the discounted price.
       - in: query
         name: max_rating
         schema:
           type: number
           format: double
-        description: Upper bound on rating, within [0, 5].
+          minimum: 0
+          maximum: 5
+        description: Upper bound on rating.
       - in: query
         name: max_reviews
         schema:
           type: integer
+          minimum: 0
         description: Upper bound on the review count.
       - in: query
         name: min_price
         schema:
           type: number
           format: double
+          minimum: 0
         description: Lower bound on the discounted price.
       - in: query
         name: min_rating
         schema:
           type: number
           format: double
-        description: Lower bound on rating, within [0, 5].
+          minimum: 0
+          maximum: 5
+        description: Lower bound on rating.
       - in: query
         name: min_reviews
         schema:
           type: integer
+          minimum: 0
         description: Lower bound on the review count.
       - in: query
         name: query
@@ -258,8 +277,8 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Stats'
-          description: 'Single query: Stats. Repeated query: see the comparison schema.'
+                $ref: '#/components/schemas/StatsOrComparison'
+          description: 'Single query: Stats. Repeated query: {items: [{query, stats}]}.'
         '400':
           content:
             application/json:
@@ -293,34 +312,42 @@ paths:
         schema:
           type: number
           format: double
+          minimum: 0
         description: Upper bound on the discounted price.
       - in: query
         name: max_rating
         schema:
           type: number
           format: double
-        description: Upper bound on rating, within [0, 5].
+          minimum: 0
+          maximum: 5
+        description: Upper bound on rating.
       - in: query
         name: max_reviews
         schema:
           type: integer
+          minimum: 0
         description: Upper bound on the review count.
       - in: query
         name: min_price
         schema:
           type: number
           format: double
+          minimum: 0
         description: Lower bound on the discounted price.
       - in: query
         name: min_rating
         schema:
           type: number
           format: double
-        description: Lower bound on rating, within [0, 5].
+          minimum: 0
+          maximum: 5
+        description: Lower bound on rating.
       - in: query
         name: min_reviews
         schema:
           type: integer
+          minimum: 0
         description: Lower bound on the review count.
       - in: query
         name: ordering
@@ -481,6 +508,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Error'
           description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
         '404':
           content:
             application/json:
@@ -504,6 +537,12 @@ paths:
       responses:
         '204':
           description: No response body
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
         '404':
           content:
             application/json:
@@ -542,12 +581,6 @@ paths:
       requestBody:
         content:
           application/json:
-            schema:
-              $ref: '#/components/schemas/CreateAlertRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/CreateAlertRequest'
-          multipart/form-data:
             schema:
               $ref: '#/components/schemas/CreateAlertRequest'
         required: true
@@ -591,6 +624,12 @@ paths:
       responses:
         '204':
           description: No response body
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
         '404':
           content:
             application/json:
@@ -630,7 +669,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                anyOf:
+                - type: object
+                  properties:
+                    detail:
+                      type: string
+                  required:
+                  - detail
+                - type: object
+                  additionalProperties:
+                    oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: Field-keyed validation errors, as DRF renders them.
           description: ''
         '429':
           content:
@@ -640,8 +693,9 @@ paths:
           description: ''
   /api/auth/login/:
     post:
-      operationId: auth_login_create
+      operationId: auth_login
       description: Login. Unthrottled, this accepted unlimited password guesses.
+      summary: Exchange username and password for a token pair
       tags:
       - auth
       requestBody:
@@ -658,10 +712,38 @@ paths:
         required: true
       responses:
         '200':
+          description: No response body
+        '400':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenObtainPair'
+                anyOf:
+                - type: object
+                  properties:
+                    detail:
+                      type: string
+                  required:
+                  - detail
+                - type: object
+                  additionalProperties:
+                    oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: Field-keyed validation errors, as DRF renders them.
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: ''
   /api/auth/google/:
     post:
@@ -698,7 +780,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                anyOf:
+                - type: object
+                  properties:
+                    detail:
+                      type: string
+                  required:
+                  - detail
+                - type: object
+                  additionalProperties:
+                    oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: Field-keyed validation errors, as DRF renders them.
           description: ''
         '401':
           content:
@@ -708,8 +804,9 @@ paths:
           description: ''
   /api/auth/refresh/:
     post:
-      operationId: auth_refresh_create
+      operationId: auth_refresh
       description: Refresh. Also a credential exchange, so it shares the same budget.
+      summary: Exchange a refresh token for a new access token
       tags:
       - auth
       requestBody:
@@ -726,10 +823,38 @@ paths:
         required: true
       responses:
         '200':
+          description: No response body
+        '400':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TokenRefresh'
+                anyOf:
+                - type: object
+                  properties:
+                    detail:
+                      type: string
+                  required:
+                  - detail
+                - type: object
+                  additionalProperties:
+                    oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: Field-keyed validation errors, as DRF renders them.
+          description: ''
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
+        '429':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: ''
   /api/auth/logout/:
     post:
@@ -761,6 +886,12 @@ paths:
       responses:
         '205':
           description: No response body
+        '400':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
         '401':
           content:
             application/json:
@@ -823,12 +954,6 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/SavedSearchRequest'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/SavedSearchRequest'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/SavedSearchRequest'
         required: true
       security:
       - jwtAuth: []
@@ -844,7 +969,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                anyOf:
+                - type: object
+                  properties:
+                    detail:
+                      type: string
+                  required:
+                  - detail
+                - type: object
+                  additionalProperties:
+                    oneOf:
+                    - type: string
+                    - type: array
+                      items:
+                        type: string
+                  description: Field-keyed validation errors, as DRF renders them.
           description: ''
         '401':
           content:
@@ -870,6 +1009,12 @@ paths:
       responses:
         '204':
           description: No response body
+        '401':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: ''
         '404':
           content:
             application/json:
@@ -907,9 +1052,11 @@ components:
         kind:
           $ref: '#/components/schemas/KindEnum'
         value:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          anyOf:
+          - type: number
+          - type: string
+            pattern: ^-?\d{1,8}(?:\.\d{1,2})?$
+          description: A decimal, as a JSON number or a string.
       required:
       - kind
       - value
@@ -921,9 +1068,11 @@ components:
         kind:
           type: string
         value:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+          anyOf:
+          - type: number
+          - type: string
+            pattern: ^-?\d{1,8}(?:\.\d{1,2})?$
+          description: A decimal, as a JSON number or a string.
         channel:
           type: string
         target_wb_id:
@@ -956,7 +1105,6 @@ components:
           type:
           - string
           - 'null'
-          minLength: 1
           maxLength: 200
     ChannelEnum:
       enum:
@@ -984,10 +1132,13 @@ components:
     Error:
       type: object
       description: |-
-        The `{"detail": ...}` body every error path returns today.
+        The `{"detail": ...}` body the shared exception handler returns.
 
-        Named here rather than per context: the exception handler is shared, so
-        one definition keeps the contract honest about that.
+        Not the only error body in the API: DRF answers its own serializer
+        validation with a field-keyed map instead, and the handler passes that
+        through untouched. The docstring here used to claim this shape covered
+        "every error path", which is what a contract test disproved — see
+        `FIELD_ERRORS_SCHEMA` below and `VALIDATION_ERROR_RESPONSE`.
       properties:
         detail:
           type: string
@@ -1014,10 +1165,13 @@ components:
       description: |-
         `refresh` is optional: a client that has already lost it still gets 205,
         because there is nothing left to revoke.
+
+        `allow_blank` for the same reason. Without it the schema advertises a
+        minimum length the view does not enforce — an empty string is exactly the
+        "already lost it" case the docstring describes, and it is answered with 205.
       properties:
         refresh:
           type: string
-          minLength: 1
     ParseEnqueued:
       type: object
       description: '`POST /api/parse/` — 202 with the accepted job, not the finished
@@ -1076,7 +1230,9 @@ components:
           minLength: 1
           maxLength: 200
         max_pages:
-          type: integer
+          type:
+          - integer
+          - 'null'
           maximum: 20
           minimum: 1
           description: Defaults to the server setting.
@@ -1179,6 +1335,31 @@ components:
       - sale_price
       - updated_at
       - wb_id
+    QueryComparison:
+      type: object
+      description: |-
+        `GET /api/stats/?query=a&query=b` — the comparison branch.
+
+        Two shapes behind one path: a single `query` returns Stats directly, two or
+        more return this. The schema has to say so, or a client generated from it
+        breaks on the second query parameter.
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/QueryStats'
+      required:
+      - items
+    QueryStats:
+      type: object
+      properties:
+        query:
+          type: string
+        stats:
+          $ref: '#/components/schemas/Stats'
+      required:
+      - query
+      - stats
     RegisterRequest:
       type: object
       properties:
@@ -1215,7 +1396,9 @@ components:
         query:
           type: string
           maxLength: 200
-        filters: {}
+        filters:
+          type: object
+          additionalProperties: true
       required:
       - id
       - name
@@ -1231,7 +1414,9 @@ components:
           type: string
           minLength: 1
           maxLength: 200
-        filters: {}
+        filters:
+          type: object
+          additionalProperties: true
       required:
       - name
       - query
@@ -1337,18 +1522,10 @@ components:
       - median_price
       - price_stddev
       - top_by_reviews
-    TokenObtainPair:
-      type: object
-      properties:
-        access:
-          type: string
-          readOnly: true
-        refresh:
-          type: string
-          readOnly: true
-      required:
-      - access
-      - refresh
+    StatsOrComparison:
+      oneOf:
+      - $ref: '#/components/schemas/Stats'
+      - $ref: '#/components/schemas/QueryComparison'
     TokenObtainPairRequest:
       type: object
       properties:
@@ -1376,17 +1553,6 @@ components:
       - access
       - refresh
       - user
-    TokenRefresh:
-      type: object
-      properties:
-        access:
-          type: string
-          readOnly: true
-        refresh:
-          type: string
-      required:
-      - access
-      - refresh
     TokenRefreshRequest:
       type: object
       properties:

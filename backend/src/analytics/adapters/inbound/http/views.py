@@ -4,7 +4,12 @@ from __future__ import annotations
 
 from django.http import HttpResponse, JsonResponse, StreamingHttpResponse
 from drf_spectacular.types import OpenApiTypes
-from drf_spectacular.utils import OpenApiParameter, OpenApiResponse, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    PolymorphicProxySerializer,
+    extend_schema,
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -19,7 +24,11 @@ from analytics.adapters.inbound.http.serializers import (
 )
 from analytics.adapters.outbound.export.writers import build_xlsx, iter_csv
 from analytics.composition import container
-from catalog.adapters.inbound.http.request_filters import parse_ordering, parse_product_filter
+from catalog.adapters.inbound.http.request_filters import (
+    BIGINT_MAX,
+    parse_ordering,
+    parse_product_filter,
+)
 from catalog.adapters.inbound.http.schema_params import ANALYTICS_PARAMETERS, ORDERING_PARAMETERS
 from catalog.adapters.inbound.http.serializers import ErrorSerializer
 from catalog.application.errors import InvalidFilter
@@ -33,9 +42,14 @@ class HistoryView(APIView):
     @extend_schema(
         operation_id="products_price_history",
         summary="Price history of one product",
-        responses={200: PriceHistorySerializer},
+        # 404 is not "no such product" — an unknown id answers 200 with an empty
+        # series. It is the routing miss: `<int:wb_id>` does not match a
+        # non-numeric id, and that path now returns an envelope.
+        responses={200: PriceHistorySerializer, 404: ErrorSerializer},
     )
     def get(self, request: Request, wb_id: int) -> Response:
+        if not (-BIGINT_MAX - 1 <= wb_id <= BIGINT_MAX):
+            raise InvalidFilter("wb_id is out of range")
         snapshots = container.build_list_history().execute(wb_id)
         return Response({"wb_id": wb_id, "points": SnapshotSerializer(snapshots, many=True).data})
 
@@ -68,10 +82,21 @@ class StatsView(APIView):
         ],
         responses={
             200: OpenApiResponse(
-                # Two shapes behind one status code. A client generated from a
-                # schema that named only the first breaks on the second query.
-                response=StatsSerializer,
-                description="Single query: Stats. Repeated query: see the comparison schema.",
+                # Two shapes behind one status code, emitted as `oneOf`. There
+                # is no discriminator field to key on — the shapes differ
+                # structurally (`items` present or not) — so the discriminator
+                # is disabled explicitly. drf-spectacular warns that this can
+                # break client generation, which is true and still the better
+                # trade: naming only the first shape does not break generation,
+                # it makes the generated client parse a comparison response as
+                # a Stats object and read every aggregate as missing.
+                response=PolymorphicProxySerializer(
+                    component_name="StatsOrComparison",
+                    serializers=[StatsSerializer, QueryComparisonSerializer],
+                    resource_type_field_name=None,
+                    many=False,
+                ),
+                description="Single query: Stats. Repeated query: {items: [{query, stats}]}.",
             ),
             400: ErrorSerializer,
         },

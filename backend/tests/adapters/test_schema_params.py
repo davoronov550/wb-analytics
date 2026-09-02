@@ -61,7 +61,9 @@ class TestNoDrift:
     def test_every_filter_key_the_parser_reads_is_declared(self) -> None:
         read = _looked_up_keys(request_filters.parse_product_filter)
 
-        assert read <= DECLARED_PARAM_NAMES, f"undeclared filter parameters: {read - DECLARED_PARAM_NAMES}"
+        undeclared = read - DECLARED_PARAM_NAMES
+
+        assert not undeclared, f"undeclared filter parameters: {undeclared}"
 
     def test_every_declared_filter_is_actually_read(self) -> None:
         """The other direction: a documented parameter that does nothing is a

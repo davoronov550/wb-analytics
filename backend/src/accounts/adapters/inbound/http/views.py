@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 
 from django.contrib.auth import get_user_model
-from rest_framework import status
 from drf_spectacular.utils import extend_schema
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.request import Request
@@ -25,10 +25,10 @@ from accounts.adapters.inbound.http.serializers import (
     SavedSearchSerializer,
     TokenPairSerializer,
 )
-from catalog.adapters.inbound.http.serializers import ErrorSerializer
 from accounts.adapters.outbound.persistence.models import ExternalIdentityModel
 from accounts.application.errors import InvalidCredential
 from accounts.composition import container
+from catalog.adapters.inbound.http.serializers import VALIDATION_ERROR_SCHEMA, ErrorSerializer
 
 User = get_user_model()
 
@@ -54,7 +54,11 @@ class RegisterView(APIView):
         operation_id="auth_register",
         summary="Create an account",
         request=RegisterSerializer,
-        responses={201: RegisteredSerializer, 400: ErrorSerializer, 429: ErrorSerializer},
+        responses={
+            201: RegisteredSerializer,
+            400: VALIDATION_ERROR_SCHEMA,
+            429: ErrorSerializer,
+        },
     )
     def post(self, request: Request) -> Response:
         serializer = RegisterSerializer(data=request.data)
@@ -79,10 +83,18 @@ class GoogleAuthView(APIView):
         operation_id="auth_google",
         summary="Exchange a Google ID token for a session",
         request=GoogleAuthRequestSerializer,
-        responses={200: TokenPairSerializer, 400: ErrorSerializer, 401: ErrorSerializer},
+        responses={
+            200: TokenPairSerializer,
+            400: VALIDATION_ERROR_SCHEMA,
+            401: ErrorSerializer,
+        },
     )
     def post(self, request: Request) -> Response:
-        credential = request.data.get("id_token")
+        # `request.data` is whatever the client sent: a JSON array or scalar
+        # gives `.get` an AttributeError, and this endpoint is unauthenticated,
+        # so the resulting 500 is reachable without credentials.
+        data = request.data if isinstance(request.data, Mapping) else {}
+        credential = data.get("id_token")
         if not credential:
             raise ValidationError({"id_token": "required"})
         try:
@@ -141,7 +153,9 @@ class LogoutView(APIView):
         request=LogoutRequestSerializer,
         # 205 even when the client no longer holds the token: there is nothing
         # left to revoke, which is not an error for the caller.
-        responses={205: None, 401: ErrorSerializer},
+        # 400 приходит от проверки NUL на границе разбора: тело без
+        # правильной формы сюда просто не доходит.
+        responses={205: None, 400: ErrorSerializer, 401: ErrorSerializer},
     )
     def post(self, request: Request) -> Response:
         raw = request.data.get("refresh") if isinstance(request.data, Mapping) else None
@@ -170,8 +184,15 @@ class SavedSearchListView(APIView):
     @extend_schema(
         operation_id="saved_searches_create",
         summary="Save a set of filters under a name",
-        request=SavedSearchSerializer,
-        responses={201: SavedSearchSerializer, 400: ErrorSerializer, 401: ErrorSerializer},
+        # JSON only: `filters` is a JSONField, and a form encoding delivers
+        # it as a string that the field then rejects. The schema was naming
+        # two media types this body cannot travel in.
+        request={"application/json": SavedSearchSerializer},
+        responses={
+            201: SavedSearchSerializer,
+            400: VALIDATION_ERROR_SCHEMA,
+            401: ErrorSerializer,
+        },
     )
     def post(self, request: Request) -> Response:
         serializer = SavedSearchSerializer(data=request.data)
@@ -191,7 +212,7 @@ class SavedSearchDetailView(APIView):
     @extend_schema(
         operation_id="saved_searches_destroy",
         summary="Delete a saved search",
-        responses={204: None, 404: ErrorSerializer},
+        responses={204: None, 401: ErrorSerializer, 404: ErrorSerializer},
     )
     def delete(self, request: Request, saved_id: int) -> Response:
         if not container.build_manage_saved_searches().delete(request.user.id, saved_id):
