@@ -30,31 +30,20 @@ class Container:
 
     async def start(self) -> None:
         """Open connections. Raising here stops the service from starting."""
-{%- if cookiecutter.has_database == 'yes' %}
         from wb_platform.config import DatabaseSettings
         from wb_platform.db import create_engine, create_session_factory
 
         self._engine = create_engine(DatabaseSettings())
         self.session_factory = create_session_factory(self._engine)
-{%- endif %}
-{%- if cookiecutter.has_kafka == 'yes' %}
         from wb_platform.config import KafkaSettings
 
         self._kafka_settings = KafkaSettings()
-{%- endif %}
-{%- if cookiecutter.has_redis == 'yes' %}
-        from wb_platform.config import RedisSettings
-
-        self._redis_settings = RedisSettings()
-{%- endif %}
         logger.info("Container started")
 
     async def stop(self) -> None:
         """Release everything, in reverse order of acquisition."""
-{%- if cookiecutter.has_database == 'yes' %}
         if self._engine is not None:
             await self._engine.dispose()
-{%- endif %}
         logger.info("Container stopped")
 
     def register_health_checks(self, registry: HealthRegistry) -> None:
@@ -70,11 +59,9 @@ class Container:
         service too. Register a probe here only for a dependency whose absence
         makes a request unanswerable.
         """
-{%- if cookiecutter.has_database == 'yes' %}
         from wb_platform.db import ping
 
         async def database() -> None:
             await ping(self._engine)
 
         registry.register("database", database)
-{%- endif %}

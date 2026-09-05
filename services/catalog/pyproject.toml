@@ -3,19 +3,19 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "wb-{{ cookiecutter.service_name }}"
+name = "wb-catalog"
 version = "0.1.0"
-description = "{{ cookiecutter.description }}"
+description = "WB Analytics catalog service"
 requires-python = ">=3.13"
 dependencies = [
-    "wb-platform[web,otel{% if cookiecutter.has_database == 'yes' %},db{% endif %}{% if cookiecutter.has_kafka == 'yes' %},kafka{% endif %}{% if cookiecutter.has_redis == 'yes' %},redis{% endif %}{% if cookiecutter.has_grpc == 'yes' %},grpc{% endif %}]",
+    "wb-platform[web,otel,db,kafka,grpc]",
 ]
 
 [tool.uv.sources]
 wb-platform = { workspace = true }
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/{{ cookiecutter.package_name }}"]
+packages = ["src/catalog"]
 
 # Extras declared by actual need, never "just in case": a spare extra pulls a
 # driver the service never calls into its image and its vulnerability surface.

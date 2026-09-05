@@ -60,9 +60,9 @@ plugins = ["pydantic.mypy"]
 warn_unreachable = true
 show_error_codes = true
 pretty = true
-# `services` добавляется сюда вместе с первым сервисом (T100): mypy падает
-# на каталоге без единого .py, а не пропускает его.
-files = ["libs", "tools/tests"]
+# `services` добавлен вместе с первым сервисом (T100): mypy падает на каталоге
+# без единого .py, а не пропускает его, поэтому раньше его тут не было.
+files = ["libs", "services", "tools/tests"]
 exclude = ["^backend/", "^frontend/", "^libs/grpc_stubs/", "/alembic/versions/"]
 
 [[tool.mypy.overrides]]

@@ -1,0 +1,72 @@
+# Values for the shared `deploy/helm/wb-service` chart (T063).
+#
+# One chart, nine value files. A chart per service would drift: the ninth would
+# be missing whatever the first learned about probes or resource limits.
+
+name: catalog
+image:
+  repository: ghcr.io/davoronov550/wb-catalog
+  # Tag is set by CI to the commit SHA. Never `latest`: it makes a rollback
+  # ambiguous, which is the one moment it must not be.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  port: 8000
+  grpcPort: 50051
+
+# Requests are what the scheduler packs by; limits are what the kernel enforces.
+# Requests set below the steady-state usage cause eviction under pressure.
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    # No CPU limit on purpose: CFS throttling adds tail latency at exactly the
+    # moment a service is busy. Memory is limited because there is no graceful
+    # degradation for exhausting it.
+    memory: 512Mi
+
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    # Tighter than liveness: leaving the load balancer is cheap and reversible,
+    # a restart is neither.
+    failureThreshold: 2
+
+# Kubernetes must not take the last pod down during a node drain.
+podDisruptionBudget:
+  minAvailable: 1
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  # Consumers scale on how far behind they are, not on CPU: a consumer waiting
+  # on a slow downstream is idle and lagging at the same time.
+  keda:
+    enabled: true
+    lagThreshold: "1000"
+
+env:
+  SERVICE_NAME: catalog
+  ENVIRONMENT: production
+  LOG_LEVEL: info
+
+# Values come from Vault via External Secrets — never from this file.
+secrets:
+  - name: DB_DSN
+    key: catalog/database/dsn
+  - name: KAFKA_BOOTSTRAP_SERVERS
+    key: shared/kafka/bootstrap
+  - name: REDIS_DSN
+    key: shared/redis/dsn

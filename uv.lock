@@ -10,6 +10,7 @@ resolution-markers = [
 [manifest]
 members = [
     "wb-analytics",
+    "wb-catalog",
     "wb-platform",
 ]
 
@@ -2497,6 +2498,17 @@ dev = [
     { name = "testcontainers", specifier = ">=4.9" },
     { name = "wb-platform", extras = ["db", "kafka", "grpc", "redis", "http", "web", "otel", "auth"], editable = "libs/platform" },
 ]
+
+[[package]]
+name = "wb-catalog"
+version = "0.1.0"
+source = { editable = "services/catalog" }
+dependencies = [
+    { name = "wb-platform", extra = ["db", "grpc", "kafka", "otel", "web"] },
+]
+
+[package.metadata]
+requires-dist = [{ name = "wb-platform", extras = ["web", "otel", "db", "kafka", "grpc"], editable = "libs/platform" }]
 
 [[package]]
 name = "wb-platform"

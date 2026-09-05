@@ -6,6 +6,7 @@
   "grpc_port": "50051",
   "has_database": ["yes", "no"],
   "has_kafka": ["yes", "no"],
+  "has_redis": ["no", "yes"],
   "has_grpc": ["yes", "no"],
   "_copy_without_render": ["*.md"]
 }

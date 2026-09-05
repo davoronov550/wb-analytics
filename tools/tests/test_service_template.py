@@ -37,6 +37,7 @@ def _generate(tmp_path: Path, **context: str) -> Path:
         "has_database": "yes",
         "has_kafka": "yes",
         "has_grpc": "no",
+        "has_redis": "no",
     }
     cookiecutter(
         str(TEMPLATE),
@@ -141,6 +142,34 @@ class TestOptionalParts:
         assert "db" not in _extras(manifest)
         assert "kafka" not in _extras(manifest)
         assert "web" in _extras(manifest)
+
+    def test_kafka_does_not_drag_redis_along(self, tmp_path: Path) -> None:
+        """The two were one flag, so every Kafka service carried the Redis
+        driver — and, worse, refused to start without `REDIS_DSN`, because the
+        composition root built `RedisSettings()` in the same branch. Found by
+        generating the first real service, not by this suite, which is why the
+        assertion is now here."""
+        service = _generate(tmp_path, service_name="kafkaonly", has_kafka="yes", has_redis="no")
+        manifest = (service / "pyproject.toml").read_text(encoding="utf-8")
+        container = (service / "src" / "kafkaonly" / "composition" / "container.py").read_text(
+            encoding="utf-8"
+        )
+
+        assert "kafka" in _extras(manifest)
+        assert "redis" not in _extras(manifest)
+        assert "RedisSettings" not in container
+
+    def test_redis_arrives_when_asked_for(self, tmp_path: Path) -> None:
+        """The other direction: a flag that never turns anything on is worse
+        than no flag, because it reads as configured."""
+        service = _generate(tmp_path, service_name="cached", has_kafka="no", has_redis="yes")
+        manifest = (service / "pyproject.toml").read_text(encoding="utf-8")
+        container = (service / "src" / "cached" / "composition" / "container.py").read_text(
+            encoding="utf-8"
+        )
+
+        assert "redis" in _extras(manifest)
+        assert "RedisSettings()" in container
 
 
 def _extras(manifest: str) -> set[str]:
