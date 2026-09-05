@@ -1,6 +1,5 @@
 import type { Filters, Stats } from "../types";
-
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+import { apiUrl } from "./endpoint";
 
 function toParams(filters: Filters): string {
   const params = new URLSearchParams();
@@ -13,7 +12,7 @@ function toParams(filters: Filters): string {
 }
 
 export async function getStats(filters: Filters): Promise<Stats> {
-  const response = await fetch(`${API_BASE}/api/stats/?${toParams(filters)}`);
+  const response = await fetch(apiUrl(`/stats/?${toParams(filters)}`));
   if (!response.ok) {
     throw new Error(`Stats request failed: ${response.status}`);
   }

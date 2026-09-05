@@ -29,7 +29,7 @@ test("builds the request URL from filters and sort", async () => {
   renderHook(() => useProducts({ minPrice: 5000, minRating: 4 } as Filters, { field: "price", descending: true }));
   await waitFor(() => expect(fetchMock).toHaveBeenCalled());
   const url = String(fetchMock.mock.calls.at(-1)![0]);
-  expect(url).toContain("/api/products/");
+  expect(url).toContain("/v1/products/");
   expect(url).toContain("min_price=5000");
   expect(url).toContain("min_rating=4");
   expect(url).toContain("ordering=-price");

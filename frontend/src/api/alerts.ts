@@ -1,7 +1,7 @@
 import { authedFetch } from "./client";
+import { apiUrl } from "./endpoint";
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
-const BASE = `${API_BASE}/api/alerts/`;
+const BASE = apiUrl("/alerts/");
 
 export interface AlertRule {
   id: number;

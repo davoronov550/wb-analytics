@@ -1,7 +1,6 @@
 import type { Filters } from "../types";
 import { authedFetch } from "./client";
-
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+import { apiUrl } from "./endpoint";
 
 /** Build the export URL for the current filtered set. */
 export function buildExportUrl(filters: Filters, format: "csv" | "xlsx"): string {
@@ -12,7 +11,7 @@ export function buildExportUrl(filters: Filters, format: "csv" | "xlsx"): string
   if (filters.minReviews != null) params.set("min_reviews", String(filters.minReviews));
   if (filters.query) params.set("query", filters.query);
   params.set("format", format);
-  return `${API_BASE}/api/export/?${params.toString()}`;
+  return apiUrl(`/export/?${params.toString()}`);
 }
 
 /** Fetch the export and hand it to the browser as a file.

@@ -1,9 +1,8 @@
 import type { TaskStatus } from "../types";
-
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+import { apiUrl } from "./endpoint";
 
 export async function getTaskStatus(taskId: string): Promise<TaskStatus> {
-  const response = await fetch(`${API_BASE}/api/tasks/${encodeURIComponent(taskId)}/`);
+  const response = await fetch(apiUrl(`/tasks/${encodeURIComponent(taskId)}/`));
   if (!response.ok) {
     throw new Error(`Task status request failed: ${response.status}`);
   }

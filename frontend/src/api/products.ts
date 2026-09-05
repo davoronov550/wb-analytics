@@ -1,6 +1,5 @@
 import type { Filters, ProductsResponse, Sort } from "../types";
-
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
+import { apiUrl } from "./endpoint";
 
 /** Build the API query string from filters + sort (param names match the backend). */
 export function buildProductsQuery(filters: Filters, sort: Sort): string {
@@ -21,7 +20,7 @@ export async function fetchProducts(
   sort: Sort,
   signal?: AbortSignal,
 ): Promise<ProductsResponse> {
-  const url = `${API_BASE}/api/products/?${buildProductsQuery(filters, sort)}`;
+  const url = apiUrl(`/products/?${buildProductsQuery(filters, sort)}`);
   const response = await fetch(url, { signal });
   if (!response.ok) {
     throw new Error(`Products request failed: ${response.status}`);

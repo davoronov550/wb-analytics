@@ -1,8 +1,8 @@
 import type { Schedule } from "../types";
 import { authedFetch } from "./client";
+import { apiUrl } from "./endpoint";
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
-const BASE = `${API_BASE}/api/schedules/`;
+const BASE = apiUrl("/schedules/");
 
 async function json<T>(response: Response): Promise<T> {
   if (!response.ok) throw new Error(`Schedules request failed: ${response.status}`);

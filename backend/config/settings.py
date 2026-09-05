@@ -213,6 +213,10 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": "/api",
     "COMPONENT_SPLIT_REQUEST": True,
     "SORT_OPERATIONS": False,
+    # Каждый контекст смонтирован дважды (`/api/` и алиас `/v1/`), поэтому без
+    # этого хука спека описывает каждую операцию дважды, с суффиксами `_2`
+    # в operationId. Контракт описывает один префикс — см. модуль хука.
+    "PREPROCESSING_HOOKS": ["config.schema_hooks.exclude_alias_prefixes"],
 }
 
 # --- CORS (frontend dev origin) ---

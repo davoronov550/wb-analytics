@@ -1,8 +1,8 @@
 import type { SavedSearch } from "../types";
 import { authedFetch } from "./client";
+import { apiUrl } from "./endpoint";
 
-const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8000";
-const BASE = `${API_BASE}/api/saved-searches/`;
+const BASE = apiUrl("/saved-searches/");
 
 export async function listSavedSearches(): Promise<SavedSearch[]> {
   const response = await authedFetch(BASE);
