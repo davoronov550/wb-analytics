@@ -1,0 +1,52 @@
+# Умолчания чарта. Реальные значения приходят из `services/<имя>/helm-values.yaml`.
+#
+# Здесь намеренно нет ни имени, ни образа: сервис, забывший их задать, должен
+# упасть на рендеринге, а не задеплоиться под чужим именем.
+name: ""
+
+image:
+  repository: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+
+replicaCount: 2
+
+service:
+  port: 8000
+  grpcPort: 0
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi
+
+probes:
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    failureThreshold: 3
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 3
+    periodSeconds: 10
+    failureThreshold: 2
+
+podDisruptionBudget:
+  minAvailable: 1
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  keda:
+    enabled: false
+    lagThreshold: "1000"
+
+env: {}
+secrets: []
+
+# Имя ClusterSecretStore, через который External Secrets ходит в Vault.
+secretStore: vault

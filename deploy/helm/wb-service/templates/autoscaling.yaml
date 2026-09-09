@@ -1,0 +1,44 @@
+{{- if .Values.autoscaling.enabled }}
+{{- if .Values.autoscaling.keda.enabled }}
+# KEDA, а не HPA по CPU. Консьюмер, ждущий медленный downstream, одновременно
+# простаивает и отстаёт: по загрузке процессора он выглядит незагруженным ровно
+# тогда, когда очередь растёт. Масштабируем по отставанию.
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ include "wb-service.name" . }}
+  labels: {{- include "wb-service.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    name: {{ include "wb-service.name" . }}
+  minReplicaCount: {{ .Values.autoscaling.minReplicas }}
+  maxReplicaCount: {{ .Values.autoscaling.maxReplicas }}
+  triggers:
+    - type: kafka
+      metadata:
+        bootstrapServers: {{ required "values: KEDA включена — нужен `autoscaling.keda.bootstrapServers`" .Values.autoscaling.keda.bootstrapServers | quote }}
+        consumerGroup: {{ include "wb-service.name" . }}
+        topic: {{ required "values: KEDA включена — нужен `autoscaling.keda.topic`" .Values.autoscaling.keda.topic | quote }}
+        lagThreshold: {{ .Values.autoscaling.keda.lagThreshold | quote }}
+{{- else }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "wb-service.name" . }}
+  labels: {{- include "wb-service.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "wb-service.name" . }}
+  minReplicas: {{ .Values.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.autoscaling.maxReplicas }}
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+{{- end }}
+{{- end }}

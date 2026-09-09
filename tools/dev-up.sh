@@ -2,7 +2,8 @@
 # Поднимает dev-окружение и ждёт, пока все сервисы станут healthy.
 #
 #   ./tools/dev-up.sh
-#   ./tools/dev-up.sh --reset     # пересоздать тома (после правки init/*.sql)
+#   ./tools/dev-up.sh --reset           # пересоздать тома (после правки init/*.sql)
+#   ./tools/dev-up.sh --observability   # плюс Grafana, Prometheus, Loki, Tempo
 #
 # Init-скрипты PostgreSQL и ClickHouse отрабатывают только на чистом томе,
 # поэтому правка init/*.sql без --reset не даст эффекта.
@@ -15,23 +16,33 @@ TIMEOUT="${TIMEOUT:-180}"
 
 [ -f "$COMPOSE_FILE" ] || { echo "Не найден $COMPOSE_FILE" >&2; exit 1; }
 
+# Наблюдаемость — четыре контейнера под профилем: нужны при работе с
+# трассировкой, а не при каждом подъёме окружения (T006).
+PROFILE=()
+OBSERVABILITY_SERVICES=""
+if [ "${1:-}" = "--observability" ]; then
+    PROFILE=(--profile observability)
+    OBSERVABILITY_SERVICES=" prometheus loki tempo grafana"
+    shift
+fi
+
 if [ "${1:-}" = "--reset" ]; then
     echo "==> Удаляю тома"
-    docker compose -f "$COMPOSE_FILE" down -v
+    docker compose -f "$COMPOSE_FILE" "${PROFILE[@]}" down -v
 fi
 
 echo "==> Поднимаю инфраструктуру"
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose -f "$COMPOSE_FILE" "${PROFILE[@]}" up -d
 
 # minio-init — одноразовый контейнер, он обязан завершиться, а не стать healthy.
-LONG_RUNNING="postgres kafka schema-registry clickhouse redis minio"
+LONG_RUNNING="postgres kafka schema-registry clickhouse redis minio${OBSERVABILITY_SERVICES}"
 
 echo "==> Жду готовности (до ${TIMEOUT} с)"
 deadline=$(( $(date +%s) + TIMEOUT ))
 while :; do
     pending=""
     for svc in $LONG_RUNNING; do
-        id="$(docker compose -f "$COMPOSE_FILE" ps -q "$svc" || true)"
+        id="$(docker compose -f "$COMPOSE_FILE" "${PROFILE[@]}" ps -q "$svc" || true)"
         if [ -z "$id" ]; then
             pending="$pending $svc(не-запущен)"
             continue
@@ -44,7 +55,7 @@ while :; do
 
     if [ "$(date +%s)" -gt "$deadline" ]; then
         echo "Не дождался:$pending" >&2
-        docker compose -f "$COMPOSE_FILE" ps
+        docker compose -f "$COMPOSE_FILE" "${PROFILE[@]}" ps
         exit 1
     fi
 
@@ -53,6 +64,6 @@ while :; do
 done
 
 echo "==> Инфраструктура готова"
-docker compose -f "$COMPOSE_FILE" ps
+docker compose -f "$COMPOSE_FILE" "${PROFILE[@]}" ps
 echo
 echo "Строки подключения — deploy/compose/README.md"

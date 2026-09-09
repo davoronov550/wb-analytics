@@ -1,0 +1,13 @@
+{{- if .Values.podDisruptionBudget }}
+# Без бюджета drain узла может увести последнюю реплику: сервис исчезает не от
+# сбоя, а от планового обслуживания.
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "wb-service.name" . }}
+  labels: {{- include "wb-service.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels: {{- include "wb-service.selectorLabels" . | nindent 6 }}
+{{- end }}

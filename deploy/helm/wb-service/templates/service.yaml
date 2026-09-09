@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "wb-service.name" . }}
+  labels: {{- include "wb-service.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector: {{- include "wb-service.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: http
+    {{- if .Values.service.grpcPort }}
+    - name: grpc
+      port: {{ .Values.service.grpcPort }}
+      targetPort: grpc
+    {{- end }}

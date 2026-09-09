@@ -57,8 +57,14 @@ autoscaling:
   # Consumers scale on how far behind they are, not on CPU: a consumer waiting
   # on a slow downstream is idle and lagging at the same time.
   keda:
-    enabled: true
+    # Выключена до фазы 2: у сервиса пока нет топика, на отставание по которому
+    # можно масштабироваться. Чарт требует `topic` и `bootstrapServers` при
+    # включении — наполовину настроенный автоскейлер хуже отсутствующего, и
+    # рендеринг падает, а не разворачивает его молча.
+    enabled: false
     lagThreshold: "1000"
+    # topic: ingestion.products.observed.v1
+    # bootstrapServers: kafka-bootstrap.kafka.svc:9092
 {%- endif %}
 
 env:
@@ -75,6 +81,8 @@ secrets:
 {%- if cookiecutter.has_kafka == 'yes' %}
   - name: KAFKA_BOOTSTRAP_SERVERS
     key: shared/kafka/bootstrap
+{%- endif %}
+{%- if cookiecutter.has_redis == 'yes' %}
   - name: REDIS_DSN
     key: shared/redis/dsn
 {%- endif %}

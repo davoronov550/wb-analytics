@@ -1,0 +1,24 @@
+# Сбор метрик в dev (T006).
+#
+# Один статический список вместо service discovery: в compose нет ни API
+# Kubernetes, ни аннотаций на подах, а «почти как в проде» здесь дороже, чем
+# честно короткий файл.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: prometheus
+    static_configs:
+      - targets: ["127.0.0.1:9090"]
+
+  # Сервисы платформы. Цель появляется здесь, когда сервис начинает отдавать
+  # /metrics; отсутствующая цель для Prometheus — состояние down, а не ошибка,
+  # поэтому список можно держать полным заранее.
+  - job_name: wb-services
+    metrics_path: /metrics
+    static_configs:
+      - targets:
+          - "host.docker.internal:8100"   # catalog
+        labels:
+          environment: dev

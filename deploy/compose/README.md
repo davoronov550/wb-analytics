@@ -33,6 +33,38 @@ kafka  bootstrap_servers=localhost:29092
 s3     endpoint=http://localhost:9002  bucket=wb-exports
 ```
 
+## Наблюдаемость (T006)
+
+Четыре контейнера под профилем — поднимаются отдельно, потому что нужны при
+работе с трассировкой и метриками, а не при каждом подъёме окружения:
+
+```bash
+./tools/dev-up.sh --observability
+```
+
+```
+Grafana      http://localhost:13000    вход не спрашивается (локальное окружение)
+Prometheus   http://localhost:19090
+Loki         http://localhost:13100
+Tempo        http://localhost:13200    OTLP gRPC — localhost:14317
+```
+
+Датасорсы заводятся файлом `observability/grafana/provisioning/`, а не руками:
+настроенные кликами, они живут в томе Grafana и исчезают вместе с ним при
+`--reset`.
+
+Сервис отправляет трассы, если указать экспортёру `localhost:14317` —
+`configure_tracing` из `libs/platform` ходит по OTLP gRPC. В Grafana из лога
+переходят в трассу по полю `trace_id`, которое structlog кладёт в каждую запись.
+
+Проверка после подъёма:
+
+```bash
+curl -s http://localhost:13000/api/health
+curl -s http://localhost:13000/api/datasources
+curl -s http://localhost:13200/ready
+```
+
 Базы PostgreSQL: `wb_catalog`, `wb_ingestion`, `wb_identity`, `wb_scheduling`,
 `wb_notifications`, `wb_export` — по одной на сервис.
 

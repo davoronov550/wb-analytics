@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "wb-service.name" . }}
+  labels: {{- include "wb-service.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  # Под автоскейлером количество реплик задаёт HPA/KEDA. Оставить его здесь —
+  # значит получить две системы, которые молча перетягивают реплики друг у друга.
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels: {{- include "wb-service.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "wb-service.labels" . | nindent 8 }}
+      annotations:
+        # Перекатывает поды, когда изменились только секреты: без этого новый
+        # пароль лежит в Secret, а поды продолжают ходить со старым.
+        checksum/secrets: {{ toYaml .Values.secrets | sha256sum }}
+    spec:
+      # Штатное завершение: сервис должен успеть дочитать текущий батч Kafka и
+      # закрыть соединения. 30 секунд по умолчанию для этого мало.
+      terminationGracePeriodSeconds: 60
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+      containers:
+        - name: {{ include "wb-service.name" . }}
+          image: "{{ required "values: `image.repository` обязателен" .Values.image.repository }}:{{ required "values: `image.tag` обязателен — CI подставляет SHA коммита, `latest` делает откат неоднозначным" .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+            {{- if .Values.service.grpcPort }}
+            - name: grpc
+              containerPort: {{ .Values.service.grpcPort }}
+            {{- end }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          {{- with .Values.env }}
+          env:
+            {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if .Values.secrets }}
+          envFrom:
+            - secretRef:
+                name: {{ include "wb-service.name" . }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          resources: {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            # Корень только для чтения, но временные файлы писать всё равно надо.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

@@ -1,0 +1,32 @@
+# Проект ограничивает, что приложениям вообще позволено создавать (T064).
+#
+# Без него приложение с правами по умолчанию может развернуть что угодно и куда
+# угодно — включая ClusterRole для себя самого.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: wb-analytics
+  namespace: argocd
+spec:
+  description: Сервисы платформы WB Analytics
+  sourceRepos:
+    - https://github.com/davoronov550/wb-analytics.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: wb-analytics
+  # Кластерных ресурсов сервисы не создают: всё, что им нужно, — в своём
+  # пространстве имён.
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: Service
+    - group: apps
+      kind: Deployment
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: autoscaling
+      kind: HorizontalPodAutoscaler
+    - group: keda.sh
+      kind: ScaledObject
+    - group: external-secrets.io
+      kind: ExternalSecret

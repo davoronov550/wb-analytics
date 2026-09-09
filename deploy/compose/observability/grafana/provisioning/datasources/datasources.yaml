@@ -1,0 +1,42 @@
+# Датасорсы задаются файлом, а не руками в интерфейсе (T006).
+#
+# Настроенные кликами, они живут в томе Grafana: `--reset` уносит их вместе с
+# томом, и следующий разработчик заводит их заново, слегка иначе.
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    uid: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+
+  - name: Loki
+    type: loki
+    uid: loki
+    access: proxy
+    url: http://loki:3100
+    jsonData:
+      derivedFields:
+        # Связывает лог с трассой: structlog кладёт trace_id в каждую запись,
+        # и без этого поля переход из лога в трассу делается копированием id
+        # руками — то есть не делается.
+        - name: TraceID
+          matcherRegex: '"trace_id":\s*"(\w+)"'
+          url: '$${__value.raw}'
+          datasourceUid: tempo
+
+  - name: Tempo
+    type: tempo
+    uid: tempo
+    access: proxy
+    url: http://tempo:3200
+    jsonData:
+      tracesToLogsV2:
+        datasourceUid: loki
+        spanStartTimeShift: -5m
+        spanEndTimeShift: 5m
+        filterByTraceID: true
+      serviceMap:
+        datasourceUid: prometheus

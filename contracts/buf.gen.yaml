@@ -1,0 +1,26 @@
+# Генерация Python-стабов из схем (T007).
+#
+# Вывод — `libs/grpc_stubs/` (док. 4, §4.10): это артефакт сборки, а не
+# исходник, и в mypy он исключён отдельным правилом — стабы, сгенерированные
+# машиной, вручную не типизируются.
+version: v2
+
+managed:
+  enabled: true
+
+plugins:
+  # Сообщения.
+  - remote: buf.build/protocolbuffers/python
+    out: libs/grpc_stubs
+  # Аннотации типов к ним. Без `.pyi` mypy видит сгенерированный код
+  # нетипизированным, и проверка границы между сервисом и схемой пропадает —
+  # ровно та же поломка, что была из-за отсутствия `py.typed`.
+  - remote: buf.build/protocolbuffers/pyi
+    out: libs/grpc_stubs
+  # Серверные и клиентские классы gRPC.
+  - remote: buf.build/grpc/python
+    out: libs/grpc_stubs
+
+inputs:
+  - directory: contracts/events
+  - directory: contracts/grpc

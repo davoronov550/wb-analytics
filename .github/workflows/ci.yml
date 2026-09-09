@@ -111,7 +111,13 @@ jobs:
           version: ${{ env.UV_VERSION }}
           enable-cache: true
       - run: uv sync --all-packages --locked
-      - run: uv run pytest services/${{ matrix.service }} -q -m "not integration"
+      # `--cov` по пути, а не по имени модуля: имя пакета совпадает с именем
+      # сервиса только пока в нём нет дефиса, а `wb-analytics` их допускает.
+      # Порог 80 % берётся из `fail_under` в pyproject и проверен: прогон с
+      # покрытием ниже порога выходит с кодом 1.
+      - run: >-
+          uv run pytest services/${{ matrix.service }} -q -m "not integration"
+          --cov=services/${{ matrix.service }}/src --cov-report=term-missing
 
       - name: Build image
         uses: docker/build-push-action@v6
@@ -134,6 +140,35 @@ jobs:
           exit-code: "1"
           ignore-unfixed: true
 
+  deploy-manifests:
+    name: Helm chart and ArgoCD
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - run: uv sync --locked
+      - uses: azure/setup-helm@v4
+      - name: Render every service and check it against the ArgoCD project
+        # Ловит две вещи, которые иначе всплывают уже в кластере: чарт, который
+        # не рендерится с values сервиса, и вид ресурса, которого AppProject не
+        # разрешает.
+        run: ./tools/helm-check.sh
+
+  contracts:
+    name: Protobuf schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # `buf breaking` сравнивает с базовой веткой, и без истории сравнивать
+          # не с чем — проверка молча выродилась бы в сравнение с самой собой.
+          fetch-depth: 0
+      - name: Validate config, lint and check compatibility
+        run: ./tools/proto-check.sh origin/${{ github.base_ref || 'main' }}
+
   security:
     name: Dependencies and secrets
     runs-on: ubuntu-latest
@@ -150,5 +185,10 @@ jobs:
       - run: uv sync --all-packages --locked
       - run: uvx pip-audit --strict
       - uses: gitleaks/gitleaks-action@v2
+      - name: Prove the secret scanner actually fires
+        # Гейт, который молча ничего не находит, неотличим от чистого
+        # репозитория. Проверено: сломанное монтирование тома отдаёт
+        # «no leaks found» с кодом 0 при полностью рабочем gitleaks.
+        run: ./tools/secrets-check.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

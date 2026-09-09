@@ -1,0 +1,59 @@
+# Одно приложение ArgoCD на сервис, порождаемое из дерева (T064).
+#
+# ApplicationSet, а не девять написанных руками Application: последние
+# разъедутся так же, как разъехались бы девять копий чарта — девятый не получит
+# того, что первый узнал про политику синхронизации или окно самолечения.
+# Генератор ходит по `services/*/helm-values.yaml`, поэтому новый сервис
+# появляется в кластере от факта своего существования в репозитории, а не от
+# того, что кто-то не забыл дописать манифест.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: wb-services
+  namespace: argocd
+spec:
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - git:
+        repoURL: https://github.com/davoronov550/wb-analytics.git
+        revision: main
+        files:
+          - path: services/*/helm-values.yaml
+  template:
+    metadata:
+      # `name` из самого values-файла, а не из пути: имя релиза и имя объектов
+      # в кластере должны приходить из одного источника.
+      name: '{{ .name }}'
+    spec:
+      project: wb-analytics
+      source:
+        repoURL: https://github.com/davoronov550/wb-analytics.git
+        targetRevision: main
+        path: deploy/helm/wb-service
+        helm:
+          valueFiles:
+            - '../../../services/{{ .name }}/helm-values.yaml'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: wb-analytics
+      syncPolicy:
+        automated:
+          # Удалять то, что исчезло из репозитория. Без этого объект, убранный
+          # из чарта, остаётся жить в кластере и однажды объясняет поведение,
+          # которого нет ни в одном манифесте.
+          prune: true
+          # Возвращать ручные правки кластера к состоянию репозитория: иначе
+          # `kubectl edit` на инциденте тихо становится постоянной конфигурацией.
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          # Применять поочерёдно, а не одной пачкой: при частичном отказе видно,
+          # какой объект не встал.
+          - ApplyOutOfSyncOnly=true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 5m

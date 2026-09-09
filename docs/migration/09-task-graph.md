@@ -4,7 +4,7 @@
 > [док. 8](08-tasks.md) и выполните `uv run python tools/task-graph.py`.
 > Единственный источник статусов — таблицы задач в док. 8.
 
-Готово **43 из 120** — задачи фаз 0-1 и рабочие пакеты фаз 2-6.
+Готово **50 из 120** — задачи фаз 0-1 и рабочие пакеты фаз 2-6.
 
 ## Как читать
 
@@ -40,7 +40,7 @@
 
 ## Фаза 0 · Фундамент
 
-Готово 40 из 47.
+Готово 47 из 47.
 
 ```mermaid
 graph LR
@@ -103,9 +103,9 @@ graph LR
     direction LR
     T060["T060<br/>uv"]
     T061["T061<br/>pip-audit"]
-    T062["T062<br/>buf lint"]
+    T062["T062<br/>buf"]
     T063["T063<br/>deploy/helm/wb-service"]
-    T064["T064<br/>ArgoCD: приложение и"]
+    T064["T064<br/>ApplicationSet"]
     T065["T065<br/>/v1/*"]
     T066["T066<br/>/v1"]
   end
@@ -183,8 +183,8 @@ graph LR
   class T003 done;
   class T004 done;
   class T005 done;
-  class T006 todo;
-  class T007 todo;
+  class T006 done;
+  class T007 done;
   class T008 done;
   class T010 done;
   class T011 done;
@@ -218,11 +218,11 @@ graph LR
   class T051 done;
   class T052 done;
   class T053 done;
-  class T060 todo;
-  class T061 todo;
-  class T062 todo;
-  class T063 todo;
-  class T064 todo;
+  class T060 done;
+  class T061 done;
+  class T062 done;
+  class T063 done;
+  class T064 done;
   class T065 done;
   class T066 done;
   classDef done fill:#1b5e20,stroke:#66bb6a,color:#fff;

@@ -59,6 +59,7 @@ class TestProbes:
 
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
+
     def test_readiness_fails_when_a_dependency_is_unreachable(self, app: FastAPI) -> None:
         """The point of the probe: it must actually check something.
 
