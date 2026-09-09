@@ -58,6 +58,32 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
+
+# pip рантайму не нужен: приложение запускается из готового venv, а образ,
+# умеющий доустанавливать пакеты, — лишняя поверхность атаки.
+#
+# Дело не только в принципе. pip вшивает в себя чужие библиотеки
+# (`pip/_vendor/`) и объявляет их в собственном SBOM, поэтому сканер видит их
+# как настоящие зависимости образа: первый же прогон trivy в CI нашёл здесь
+# msgpack 1.1.2 и pkg_resources из setuptools 70.3.0 — обе с HIGH и обе
+# недостижимые для нашего кода. Обновить их нельзя: они не в `uv.lock`, а
+# внутри pip.
+#
+# Пути вычисляются, а не пишутся руками: они содержат версию Python, и
+# захардкоженный `python3.13` тихо перестал бы совпадать при обновлении базы.
+# `/usr/local/bin/python`, а не `python`: PATH выше ставит venv первым, и
+# `python` — это его интерпретатор. Его `purelib` указывает в venv, где pip и
+# нет, так что удаление молча не удаляло ничего, а `command -v pip` при этом
+# отвечал «нет» — исчезали только симлинки в /usr/local/bin.
+#
+# Последняя строка проверяет результат, а не вычисленный путь. Первая
+# редакция проверки смотрела в тот же `$SITE` — то есть в venv — и потому
+# проходила ровно в том случае, который должна была поймать.
+RUN SITE="$(/usr/local/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')" \
+    && STDLIB="$(/usr/local/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["stdlib"])')" \
+    && rm -rf "$SITE"/pip "$SITE"/pip-*.dist-info "$STDLIB/ensurepip" \
+    && rm -f /usr/local/bin/pip /usr/local/bin/pip3 /usr/local/bin/pip3.* \
+    && ! find /usr/local/lib \( -name pip -o -name msgpack -o -name pkg_resources \) -print -quit | grep -q .
 USER app
 WORKDIR /app
 EXPOSE 8000
