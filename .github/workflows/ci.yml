@@ -119,6 +119,11 @@ jobs:
           uv run pytest services/${{ matrix.service }} -q -m "not integration"
           --cov=services/${{ matrix.service }}/src --cov-report=term-missing
 
+      - name: Set up buildx
+        # Драйвер по умолчанию (`docker`) не умеет экспортировать кеш, и сборка
+        # падает на `cache-to: type=gha` — не на самом образе.
+        uses: docker/setup-buildx-action@v3
+
       - name: Build image
         uses: docker/build-push-action@v6
         with:
@@ -186,11 +191,17 @@ jobs:
           enable-cache: true
       - run: uv sync --all-packages --locked
       - run: uvx pip-audit --strict
-      - uses: gitleaks/gitleaks-action@v2
-      - name: Prove the secret scanner actually fires
-        # Гейт, который молча ничего не находит, неотличим от чистого
-        # репозитория. Проверено: сломанное монтирование тома отдаёт
-        # «no leaks found» с кодом 0 при полностью рабочем gitleaks.
+      - name: Scan history for secrets, and prove the scanner fires
+        # Тот же gitleaks, но напрямую, без `gitleaks/gitleaks-action`.
+        # Действие сверяет лицензию неаутентифицированным запросом к API
+        # GitHub и при упоре в лимит требует ключ: гейт безопасности начинает
+        # падать через раз по причине, не имеющей отношения к секретам.
+        # Первый прогон прошёл, второй — нет, при том же содержимом.
+        #
+        # Скрипт вдобавок доказывает, что детектор срабатывает: гейт, который
+        # молча ничего не находит, неотличим от чистого репозитория, и
+        # сломанное монтирование тома отдаёт ровно «no leaks found» с кодом 0.
+        # Теряем выгрузку SARIF в code scanning — сам гейт не слабеет.
         run: ./tools/secrets-check.sh
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
