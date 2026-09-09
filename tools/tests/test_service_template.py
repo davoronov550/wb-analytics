@@ -104,6 +104,14 @@ class TestStructure:
     def test_expected_file_is_present(self, generated: Path, relative: str) -> None:
         assert (generated / relative).exists(), relative
 
+    def test_the_package_is_marked_as_typed(self, generated: Path) -> None:
+        """Without `py.typed`, everything importing this service sees it as
+        untyped and `mypy` silently stops checking the boundary — the same
+        defect `libs/platform` had, found there once and reintroduced here
+        because the template never carried the marker.
+        """
+        assert (generated / "src" / "probe" / "py.typed").exists()
+
     def test_the_hexagon_is_the_starting_shape(self, generated: Path) -> None:
         """A service that starts flat never becomes layered afterwards."""
         package = generated / "src" / "probe"
