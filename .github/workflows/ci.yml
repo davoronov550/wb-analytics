@@ -133,7 +133,9 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Scan image
-        uses: aquasecurity/trivy-action@0.28.0
+        # Тег с префиксом `v`: `0.28.0` без него не существует, и задание падало
+        # на резолве действия — то есть образ не собирался и не сканировался вовсе.
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: wb-${{ matrix.service }}:${{ github.sha }}
           severity: HIGH,CRITICAL

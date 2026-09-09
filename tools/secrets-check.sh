@@ -32,8 +32,15 @@ docker run --rm -v "$REPO:/repo" "$GITLEAKS" git /repo --no-banner
 echo "== проверяем, что детектор вообще срабатывает =="
 probe="$(mktemp -d)"
 trap 'rm -rf "$probe"' EXIT
-# Синтетический ключ: форма настоящего, значение выдуманное.
-printf 'AWS_KEY = "AKIA3FGH72JQKLMNP4RS"\n' > "$probe/planted.py"
+# Ключ собирается из двух частей и только в рантайме. Записанный сюда целиком,
+# он неотличим от настоящего для любого сканера — и gitleaks справедливо ронял
+# на нём весь пайплайн: самопроверка гейта ломала гейт, который проверяет.
+# Это не обфускация: обе половины на виду, склеенного значения просто нет ни в
+# одном файле репозитория.
+prefix=AKIA
+body=3FGH72JQKLMNP4RS
+printf 'AWS_KEY = "%s%s"
+' "$prefix" "$body" > "$probe/planted.py"
 
 probe_win="$probe"
 command -v cygpath >/dev/null 2>&1 && probe_win="$(cygpath -m "$probe")"
