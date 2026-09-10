@@ -33,6 +33,12 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run mypy
+      - name: Ported modules still behave like the Django originals
+        # Риск R2: экспертиза спрятана в домене, и «перепишем красиво»
+        # возвращает уже вылеченные баги. Сравниваются деревья разбора, а не
+        # текст: переименование модуля и сортировка `__all__` линтером
+        # поведения не меняют, а изменённое условие — меняет.
+        run: uv run python tools/check_port_fidelity.py catalog
 
   plan-is-current:
     name: Task graph matches the backlog
