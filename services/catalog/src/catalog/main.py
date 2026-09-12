@@ -23,6 +23,7 @@ from typing import Any
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+from catalog.adapters.inbound.http.routes import router
 from catalog.composition.container import Container
 from wb_platform.config import ObservabilitySettings, ServiceSettings
 from wb_platform.errors import envelope_from_exception
@@ -86,6 +87,7 @@ def create_app(
 
     _register_error_handler(app)
     _register_probes(app)
+    app.include_router(router)
     return app
 
 
