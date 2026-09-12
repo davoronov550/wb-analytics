@@ -49,6 +49,11 @@ def _alembic(command: str, dsn: str) -> None:
         env={**os.environ, "DB_DSN": dsn, "SERVICE_NAME": "catalog"},
         capture_output=True,
         text=True,
+        # Явная кодировка: по умолчанию Windows читает вывод в cp1252, а
+        # сообщение миграции русское. Без этого диагностика ниже падала бы на
+        # декодировании раньше, чем успела показать, что именно сломалось.
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     if result.returncode != 0:
