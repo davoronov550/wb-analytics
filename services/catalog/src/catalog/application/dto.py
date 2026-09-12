@@ -6,9 +6,10 @@ model (`ProductView`) is what the HTTP adapter serializes to JSON.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import InitVar, dataclass, field
 from datetime import datetime
 from decimal import Decimal
+from typing import Final
 
 __all__ = [
     "ACTIVE_PARSE_STATUSES",
@@ -16,6 +17,7 @@ __all__ = [
     "CollectInput",
     "CollectResult",
     "Ordering",
+    "SortKey",
     "Page",
     "ParseJob",
     "ParseStatus",
@@ -121,13 +123,64 @@ class ProductFilter:
 
 
 @dataclass(frozen=True)
-class Ordering:
-    field: str = "reviews_count"
-    descending: bool = True
+class SortKey:
+    """One level of the sort: a field and its direction.
 
-    def __post_init__(self) -> None:
-        if self.field not in ORDERABLE_FIELDS:
-            raise ValueError(f"Cannot order by {self.field!r}; allowed: {sorted(ORDERABLE_FIELDS)}")
+    Ascending by default, as in SQL — the interesting direction is then stated
+    at the call site instead of inherited from a default nobody re-reads.
+    """
+
+    field: str
+    descending: bool = False
+
+
+#: What `Ordering()` means when nothing is asked for. Kept as a module-level
+#: constant rather than inlined: `__post_init__` tells "keys were given" from
+#: "keys were defaulted" by identity with this object.
+_DEFAULT_KEYS: Final[tuple[SortKey, ...]] = (SortKey("reviews_count", descending=True),)
+
+
+@dataclass(frozen=True)
+class Ordering:
+    """The sort, as a list of levels.
+
+    It used to be one field. `SortBuilder.tsx` has always built any number of
+    levels, and `buildProductsQuery` shipped only the first — the rest was
+    applied in the browser over the same thousand-row page. That works only
+    while the page holds everything; with server-side pagination a page ordered
+    by the first level and re-sorted by the client holds the *wrong rows*, not
+    merely rows in the wrong order.
+
+    This is the one sanctioned edit to the copied application layer
+    (док. 7, §7.6). `Ordering(field=...)` therefore keeps working and means a
+    list of one, so nothing that already calls it has to change.
+    """
+
+    keys: tuple[SortKey, ...] = _DEFAULT_KEYS
+    #: The pre-T110 spelling. `InitVar`, not a field: it is a way to build
+    #: `keys`, and keeping it as an attribute as well would invite code to read
+    #: the first level and ignore the rest — the bug this change removes.
+    field: InitVar[str | None] = None
+    descending: InitVar[bool | None] = None
+
+    def __post_init__(self, field: str | None, descending: bool | None) -> None:
+        if field is not None:
+            if self.keys is not _DEFAULT_KEYS:
+                raise ValueError("Ordering takes `keys` or `field`, not both.")
+            # The old default was descending; `None` here means "not stated".
+            object.__setattr__(self, "keys", (SortKey(field, descending is not False),))
+        elif descending is not None:
+            raise ValueError("Ordering takes `descending` only together with `field`.")
+
+        if not self.keys:
+            # An ordering with no levels has no defined row order, and keyset
+            # pagination over an undefined order repeats and skips rows.
+            raise ValueError("Ordering needs at least one key.")
+
+        unknown = sorted({key.field for key in self.keys} - ORDERABLE_FIELDS)
+        if unknown:
+            listed = ", ".join(repr(name) for name in unknown)
+            raise ValueError(f"Cannot order by {listed}; allowed: {sorted(ORDERABLE_FIELDS)}")
 
 
 @dataclass(frozen=True)

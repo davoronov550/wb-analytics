@@ -36,6 +36,10 @@ class Ported(NamedTuple):
     service_root: str
     #: (путь в Django, путь в сервисе) — относительно соответствующего корня.
     modules: tuple[tuple[str, str], ...]
+    #: Определения верхнего уровня, которым **разрешено** разойтись, и причина.
+    #: Ключ — путь в сервисе. Исключается имя, а не файл: иначе вместе с одной
+    #: санкционированной правкой из-под проверки уходит весь остальной модуль.
+    sanctioned: dict[str, tuple[frozenset[str], str]] = {}
 
 
 PORTED: dict[str, Ported] = {
@@ -67,6 +71,16 @@ PORTED: dict[str, Ported] = {
                 "application/use_cases/list_products.py",
             ),
         ),
+        sanctioned={
+            "application/dto.py": (
+                frozenset({"Ordering", "SortKey", "_DEFAULT_KEYS"}),
+                "T110: Ordering — список ключей сортировки. Единственная "
+                "санкционированная правка перенесённого слоя (док. 7, §7.6): "
+                "многоуровневая сортировка переезжает на сервер, иначе "
+                "серверная страница отсортирована не так, как ждёт интерфейс. "
+                "Остальные определения модуля по-прежнему сверяются.",
+            ),
+        },
     ),
 }
 
@@ -89,7 +103,19 @@ class _Normalise(ast.NodeTransformer):
         return self.generic_visit(node)
 
 
-def _behaviour(path: Path) -> str:
+def _name_of(node: ast.stmt) -> str | None:
+    """Имя определения верхнего уровня, если это определение."""
+    if isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef):
+        return node.name
+    if isinstance(node, ast.Assign) and len(node.targets) == 1:
+        target = node.targets[0]
+        return target.id if isinstance(target, ast.Name) else None
+    if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+        return node.target.id
+    return None
+
+
+def _behaviour(path: Path, exclude: frozenset[str] = frozenset()) -> str:
     tree = _Normalise().visit(ast.parse(path.read_bytes().replace(b"\r\n", b"\n").decode("utf-8")))
     # Докстринги — текст, а не поведение.
     for node in ast.walk(tree):
@@ -103,10 +129,17 @@ def _behaviour(path: Path) -> str:
             ):
                 first.value.value = "DOC"
     # Порядок импортов переставляет ruff; сортируем их отдельно от остального тела.
-    imports = sorted(
-        (ast.dump(n) for n in tree.body if isinstance(n, ast.Import | ast.ImportFrom)),
-    )
-    rest = [ast.dump(n) for n in tree.body if not isinstance(n, ast.Import | ast.ImportFrom)]
+    body = [n for n in tree.body if _name_of(n) not in exclude]
+    if exclude:
+        # Санкционированное определение тянет за собой две вещи, которые
+        # меняются вместе с ним и сами по себе ничего не значат: строку в
+        # `__all__` и импорты, которые оно потребовало. Сверять их — значит
+        # ловить следствие вместо причины. Остальные определения модуля
+        # сравниваются как обычно.
+        body = [n for n in body if _name_of(n) != "__all__"]
+        body = [n for n in body if not isinstance(n, ast.Import | ast.ImportFrom)]
+    imports = sorted(ast.dump(n) for n in body if isinstance(n, ast.Import | ast.ImportFrom))
+    rest = [ast.dump(n) for n in body if not isinstance(n, ast.Import | ast.ImportFrom)]
     return "\n".join([*imports, *rest])
 
 
@@ -115,10 +148,14 @@ def main(context: str) -> int:
 
     drifted: list[str] = []
     for original, copied in ported.modules:
-        if _behaviour(REPO / ported.django_root / original) != _behaviour(
-            REPO / ported.service_root / copied
+        exempt, reason = ported.sanctioned.get(copied, (frozenset(), ""))
+        if _behaviour(REPO / ported.django_root / original, exempt) != _behaviour(
+            REPO / ported.service_root / copied, exempt
         ):
             drifted.append(copied)
+        elif exempt:
+            names = ", ".join(sorted(exempt))
+            print(f"  {copied}: не сверяются {names} (плюс `__all__` и импорты) — {reason}")
 
     print(f"{context}: сравнено {len(ported.modules)} модулей")
     if drifted:
