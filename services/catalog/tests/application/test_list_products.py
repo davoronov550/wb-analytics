@@ -7,6 +7,8 @@ fields) and pass-through of filter/ordering/pagination to the repository.
 from decimal import Decimal
 from typing import Any
 
+import pytest
+
 from catalog.application.dto import Ordering, Page, ProductFilter, ProductView
 from catalog.application.use_cases.list_products import ListProducts
 from catalog.domain.product import Product
@@ -33,26 +35,31 @@ def _product(
     )
 
 
+# Сценарии стали корутинами вместе с портами: за каждым портом стоит
+# ввод-вывод. Строгий режим pytest-asyncio требует маркер явно.
+pytestmark = pytest.mark.asyncio
+
+
 class FakeRepository:
     def __init__(self, page: Page[Product]) -> None:
         self._page = page
         self.calls: list[tuple[ProductFilter, Ordering, int, int]] = []
 
     # pragma: no cover - not used here
-    def upsert_many(self, *args: object, **kwargs: object) -> Any:
+    async def upsert_many(self, *args: object, **kwargs: object) -> Any:
         raise NotImplementedError
 
-    def list(
+    async def list(
         self, filter: ProductFilter, ordering: Ordering, page: int, page_size: int
     ) -> Page[Product]:
         self.calls.append((filter, ordering, page, page_size))
         return self._page
 
 
-def test_maps_domain_products_to_views_with_discount_fields() -> None:
+async def test_maps_domain_products_to_views_with_discount_fields() -> None:
     repo = FakeRepository(Page(items=[_product()], count=1, page=1, page_size=1000))
 
-    result = ListProducts(repository=repo).execute(
+    result = await ListProducts(repository=repo).execute(
         ProductFilter(min_rating=Decimal("4")), Ordering(field="price"), 1, 1000
     )
 
@@ -70,19 +77,19 @@ def test_maps_domain_products_to_views_with_discount_fields() -> None:
     assert view.query == "q"
 
 
-def test_passes_filter_ordering_pagination_to_repository() -> None:
+async def test_passes_filter_ordering_pagination_to_repository() -> None:
     repo = FakeRepository(Page(items=[], count=0, page=2, page_size=50))
     product_filter = ProductFilter(min_price=Decimal("5000"))
     ordering = Ordering(field="reviews_count", descending=True)
 
-    ListProducts(repository=repo).execute(product_filter, ordering, 2, 50)
+    await ListProducts(repository=repo).execute(product_filter, ordering, 2, 50)
 
     assert repo.calls == [(product_filter, ordering, 2, 50)]
 
 
-def test_preserves_page_metadata() -> None:
+async def test_preserves_page_metadata() -> None:
     repo = FakeRepository(Page(items=[], count=123, page=3, page_size=20))
 
-    result = ListProducts(repository=repo).execute(ProductFilter(), Ordering(), 3, 20)
+    result = await ListProducts(repository=repo).execute(ProductFilter(), Ordering(), 3, 20)
 
     assert (result.count, result.page, result.page_size) == (123, 3, 20)

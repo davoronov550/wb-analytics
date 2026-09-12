@@ -90,6 +90,34 @@ PORTED: dict[str, Ported] = {
 class _Normalise(ast.NodeTransformer):
     """Стирает то, что перенос меняет по построению."""
 
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> ast.FunctionDef:
+        """`async def` → `def`.
+
+        За каждым портом перенесённого слоя стоит ввод-вывод: PostgreSQL через
+        asyncpg, Wildberries через aiohttp, публикация через Kafka. Django делал
+        всё это синхронно, FastAPI — нет, поэтому сигнатуры портов и сценариев
+        стали корутинами.
+
+        Это соглашение о вызове, а не логика: что код вычисляет, не изменилось
+        ни в одной строке. Нормализуется здесь, а не заносится в исключения,
+        потому что иначе из-под проверки ушли бы все порты и все сценарии —
+        то есть почти весь слой, ради изменения одного ключевого слова.
+        """
+        converted = ast.FunctionDef(
+            name=node.name,
+            args=node.args,
+            body=node.body,
+            decorator_list=node.decorator_list,
+            returns=node.returns,
+            type_comment=node.type_comment,
+            type_params=node.type_params,
+        )
+        return ast.copy_location(self.generic_visit(converted), node)
+
+    def visit_Await(self, node: ast.Await) -> ast.expr:
+        """`await x` → `x`, по той же причине."""
+        return self.generic_visit(node.value)
+
     def visit_ImportFrom(self, node: ast.ImportFrom) -> ast.ImportFrom:
         node.module = "MODULE"
         return node

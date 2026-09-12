@@ -22,17 +22,20 @@ EventHandler = Callable[[DomainEvent], None]
 class EventBusPort(Protocol):
     """Publish/subscribe seam between bounded contexts."""
 
-    def subscribe(self, event_type: type[DomainEvent], handler: EventHandler) -> None:
+    async def subscribe(self, event_type: type[DomainEvent], handler: EventHandler) -> None:
         """Register ``handler`` to receive events of ``event_type``."""
         ...
 
-    def publish(self, event: DomainEvent) -> None:
+    async def publish(self, event: DomainEvent) -> None:
         """Deliver ``event`` to every handler subscribed to its type."""
         ...
 
 
 class ClockPort(Protocol):
-    """Time source — injected so use cases and tests are deterministic."""
+    """Time source — injected so use cases and tests are deterministic.
+
+    Единственный порт, оставшийся синхронным: чтение часов не ввод-вывод, и
+    `await` перед ним сообщал бы читателю неправду о стоимости вызова."""
 
     def now(self) -> datetime:
         """Return the current timezone-aware time."""
@@ -42,6 +45,6 @@ class ClockPort(Protocol):
 class TaskQueuePort(Protocol):
     """Enqueue background work off the request path."""
 
-    def enqueue(self, task_name: str, payload: dict[str, object]) -> str:
+    async def enqueue(self, task_name: str, payload: dict[str, object]) -> str:
         """Schedule a named task with a JSON-serializable payload; return its id."""
         ...

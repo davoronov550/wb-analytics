@@ -21,13 +21,13 @@ __all__ = ["CollectProducts", "ListProducts"]
 
 
 class CollectProducts(Protocol):
-    def execute(self, command: CollectInput) -> CollectResult:
+    async def execute(self, command: CollectInput) -> CollectResult:
         """Collect products for a query from WB and upsert them."""
         ...
 
 
 class ListProducts(Protocol):
-    def execute(
+    async def execute(
         self,
         filter: ProductFilter,
         ordering: Ordering,

@@ -19,13 +19,13 @@ class EnqueueCollection:
         self._repository = repository
         self._queue = queue
 
-    def execute(self, query: str, max_pages: int | None = None) -> ParseJob:
-        active = self._repository.find_active(query)
+    async def execute(self, query: str, max_pages: int | None = None) -> ParseJob:
+        active = await self._repository.find_active(query)
         if active is not None:
             return active
 
-        job = self._repository.create_pending(query)
-        self._queue.enqueue(
+        job = await self._repository.create_pending(query)
+        await self._queue.enqueue(
             COLLECT_TASK_NAME,
             {"task_id": job.task_id, "query": query, "max_pages": max_pages},
         )

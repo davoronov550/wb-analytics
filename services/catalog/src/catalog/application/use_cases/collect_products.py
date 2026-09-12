@@ -36,15 +36,15 @@ class CollectProducts:
         self._clock = clock
         self._default_max_pages = default_max_pages
 
-    def execute(self, command: CollectInput) -> CollectResult:
+    async def execute(self, command: CollectInput) -> CollectResult:
         max_pages = command.max_pages if command.max_pages is not None else self._default_max_pages
-        raws = self._gateway.fetch(command.query, max_pages)
+        raws = await self._gateway.fetch(command.query, max_pages)
 
         products = [p for p in (self._to_product(raw, command.query) for raw in raws) if p]
-        result = self._repository.upsert_many(products, command.query)
+        result = await self._repository.upsert_many(products, command.query)
 
         now = self._clock.now()
-        self._event_bus.publish(
+        await self._event_bus.publish(
             ProductsCollected(
                 query=command.query,
                 wb_ids=tuple(p.wb_id for p in products),

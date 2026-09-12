@@ -17,14 +17,14 @@ class ListProducts:
     def __init__(self, *, repository: ProductRepositoryPort) -> None:
         self._repository = repository
 
-    def execute(
+    async def execute(
         self,
         filter: ProductFilter,
         ordering: Ordering,
         page: int,
         page_size: int,
     ) -> Page[ProductView]:
-        result = self._repository.list(filter, ordering, page, page_size)
+        result = await self._repository.list(filter, ordering, page, page_size)
         return Page(
             items=[self._to_view(product) for product in result.items],
             count=result.count,
