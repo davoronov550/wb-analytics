@@ -60,9 +60,7 @@ class FakeEventBus:
         self.published: list[DomainEvent] = []
 
     # pragma: no cover - not used here
-    async def subscribe(
-        self, event_type: type[DomainEvent], handler: EventHandler
-    ) -> None:
+    async def subscribe(self, event_type: type[DomainEvent], handler: EventHandler) -> None:
         pass
 
     async def publish(self, event: DomainEvent) -> None:

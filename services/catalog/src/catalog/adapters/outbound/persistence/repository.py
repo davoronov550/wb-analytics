@@ -97,13 +97,9 @@ class SqlAlchemyProductRepository:
         отказаться от него нельзя, пока контракт не сменился на курсорный.
         """
         base = self._filtered(filter)
-        total = await self._session.scalar(
-            sa.select(sa.func.count()).select_from(base.subquery())
-        )
+        total = await self._session.scalar(sa.select(sa.func.count()).select_from(base.subquery()))
         page_query = (
-            base.order_by(*self._order_by(ordering))
-            .offset((page - 1) * page_size)
-            .limit(page_size)
+            base.order_by(*self._order_by(ordering)).offset((page - 1) * page_size).limit(page_size)
         )
         return Page(
             items=await self._rows(page_query),
@@ -150,9 +146,7 @@ class SqlAlchemyProductRepository:
     # `Sequence`, а не `list`: метод `list` ниже перекрывает встроенное имя
     # внутри тела класса, и `list[Product]` в аннотации разрешается в него.
     # Имя метода менять нельзя — оно приходит из порта.
-    async def upsert_many(
-        self, products: Sequence[Product], source_query: str
-    ) -> UpsertResult:
+    async def upsert_many(self, products: Sequence[Product], source_query: str) -> UpsertResult:
         """Вся пачка одним `INSERT ... ON CONFLICT`.
 
         Сбор приносит сотни товаров сразу, поэтому один запрос, а не запрос на
