@@ -46,6 +46,23 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 FROM python:3.13-slim AS runtime
 
+# Обновления безопасности базового образа.
+#
+# Исправления в Debian выходят раньше, чем пересобирается `python:3.13-slim`,
+# и в этом промежутке образ несёт известные HIGH/CRITICAL — первый же прогон
+# trivy нашёл четыре: gzip, libpcre2, libsqlite3, perl-base, все с доступными
+# версиями. Без этого шага сборка зелёная ровно до следующей публикации CVE, а
+# потом падает по причине, на которую разработчик сервиса повлиять не может.
+#
+# Цена — воспроизводимость: один и тот же Dockerfile даёт разные образы в
+# разные дни. Размен сознательный. Версии приложения по-прежнему фиксирует
+# `uv.lock`, а слой ОС с известными дырами хуже, чем слой ОС, который может
+# обновиться.
+RUN apt-get update \
+    && apt-get upgrade -y --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Non-root: a container escape should not begin with root in the namespace.
 RUN groupadd --system --gid 1001 app \
     && useradd --system --uid 1001 --gid app --no-create-home app
