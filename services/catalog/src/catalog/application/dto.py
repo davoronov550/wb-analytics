@@ -17,13 +17,13 @@ __all__ = [
     "CollectInput",
     "CollectResult",
     "Ordering",
-    "SortKey",
     "Page",
     "ParseJob",
     "ParseStatus",
     "ProductFilter",
     "ProductView",
     "RawProduct",
+    "SortKey",
     "UpsertResult",
 ]
 

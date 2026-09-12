@@ -22,7 +22,9 @@ from __future__ import annotations
 import argparse
 import ast
 import sys
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import NamedTuple
 
 REPO = Path(__file__).resolve().parent.parent
@@ -39,7 +41,7 @@ class Ported(NamedTuple):
     #: Определения верхнего уровня, которым **разрешено** разойтись, и причина.
     #: Ключ — путь в сервисе. Исключается имя, а не файл: иначе вместе с одной
     #: санкционированной правкой из-под проверки уходит весь остальной модуль.
-    sanctioned: dict[str, tuple[frozenset[str], str]] = {}
+    sanctioned: Mapping[str, tuple[frozenset[str], str]] = MappingProxyType({})
 
 
 PORTED: dict[str, Ported] = {
