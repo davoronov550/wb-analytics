@@ -137,6 +137,18 @@ class TestOptionalParts:
         assert not (service / "alembic").exists()
         assert not (service / "alembic.ini").exists()
 
+    def test_alembic_sees_the_service_tables_from_the_start(self, generated: Path) -> None:
+        """The wiring, not the tables. `service_metadata` is empty in a fresh
+        service; connecting it to `target_metadata` later is the step someone
+        forgets, and the symptom is an autogenerate that reports no changes for
+        a table that was just added."""
+        env = (generated / "alembic" / "env.py").read_text(encoding="utf-8")
+        models = generated / "src" / "probe" / "adapters" / "outbound" / "persistence" / "models.py"
+
+        assert models.exists()
+        assert "target_metadata = [service_metadata, outbox_metadata]" in env
+        assert "service_metadata" in models.read_text(encoding="utf-8")
+
     def test_a_service_with_a_database_gets_its_own_history(self, generated: Path) -> None:
         """One history per service — a shared one would couple deploys."""
         assert (generated / "alembic" / "env.py").exists()

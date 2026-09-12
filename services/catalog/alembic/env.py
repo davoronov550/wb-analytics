@@ -18,6 +18,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from catalog.adapters.outbound.persistence.models import service_metadata
 from wb_platform.config import DatabaseSettings
 from wb_platform.outbox import outbox_metadata
 
@@ -26,9 +27,13 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# The outbox table ships with the platform: every service that owns a database
-# needs it, and nine hand-written copies would drift.
-target_metadata = outbox_metadata
+# Two collections, consulted in order. The outbox table ships with the platform
+# — every service that owns a database needs it, and nine hand-written copies
+# would drift — while the catalog's own tables live in the service.
+#
+# Alembic requires the table keys across the sequence to be unique and raises
+# if they collide, so a service cannot accidentally shadow the outbox.
+target_metadata = [service_metadata, outbox_metadata]
 
 config.set_main_option("sqlalchemy.url", str(DatabaseSettings().dsn))
 
