@@ -35,6 +35,46 @@ services:
       timeout: 3s
       retries: 10
 
+  # ----------------------------------------------------------------- PgBouncer
+  # Пулер соединений в режиме транзакций (T127).
+  #
+  # Нужен потому, что каждая реплика сервиса держит свой пул, а PostgreSQL —
+  # процесс на соединение. Девять сервисов по несколько реплик исчерпывают
+  # `max_connections` раньше, чем упрутся в процессор.
+  #
+  # В dev он стоит рядом с базой не ради производительности, а чтобы код ходил
+  # **через** пулер уже здесь: транзакционный режим несовместим с prepared
+  # statements, и обнаружить это под нагрузкой в проде дороже, чем в dev. Со
+  # стороны кода это закрыто в `libs/platform/db.py` (T014).
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.23.1-p2
+    depends_on:
+      postgres: {condition: service_healthy}
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER:-postgres}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      # Соединение возвращается в пул после каждой транзакции, а не после
+      # отключения клиента. Ради этого пулер и ставится.
+      POOL_MODE: transaction
+      # Обязателен при транзакционном режиме: без него prepared statements
+      # накапливаются на backend и деградируют его. Конфигурация пулера,
+      # кодом не закрывается.
+      SERVER_RESET_QUERY: DISCARD ALL
+      MAX_CLIENT_CONN: "500"
+      DEFAULT_POOL_SIZE: "25"
+      AUTH_TYPE: scram-sha-256
+      ADMIN_USERS: ${POSTGRES_USER:-postgres}
+    ports:
+      - "127.0.0.1:${PGBOUNCER_PORT:-16432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
   # ---------------------------------------------------------- Kafka 4.x (KRaft)
   # Один контейнер в совмещённом режиме broker+controller. Так можно только в
   # dev: в проде контроллеры выносятся отдельными подами, кворум из трёх

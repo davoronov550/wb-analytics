@@ -26,11 +26,32 @@ docker compose -f deploy/compose/docker-compose.yml up -d
 ## Строки подключения
 
 ```
-postgresql+asyncpg://wb_app:wbapp@localhost:15432/wb_catalog
+postgresql+asyncpg://wb_app:wbapp@localhost:15432/wb_catalog   напрямую
+postgresql+asyncpg://wb_app:wbapp@localhost:16432/wb_catalog   через PgBouncer
 clickhouse://wb_app:wbapp@localhost:8123/wb_analytics
 redis://:devredis@localhost:16379/0
 kafka  bootstrap_servers=localhost:29092
 s3     endpoint=http://localhost:9002  bucket=wb-exports
+```
+
+## PgBouncer (T127)
+
+Пулер в транзакционном режиме на порту 16432. Сервисы ходят **через него**, а не
+напрямую: PostgreSQL — процесс на соединение, и девять сервисов по несколько
+реплик исчерпают `max_connections` раньше, чем упрутся в процессор.
+
+Транзакционный режим несовместим с prepared statements. Со стороны кода это
+закрыто в `libs/platform/db.py`: оба кеша statement-ов отключены, имена
+уникальны, а `DB_PGBOUNCER=true` переключает движок на `NullPool`. Со стороны
+пулера обязателен `server_reset_query = DISCARD ALL` — это его конфигурация,
+кодом не закрывается.
+
+Насколько это не теория: со снятыми защитами шестьдесят параллельных запросов
+через пулер дали 31 ответ 500 с `DuplicatePreparedStatementError`; с
+защитами — шестьдесят ответов 200.
+
+```bash
+psql postgresql://wb_app:wbapp@localhost:16432/wb_catalog -c 'select 1'
 ```
 
 ## Наблюдаемость (T006)

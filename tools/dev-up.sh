@@ -35,7 +35,7 @@ echo "==> Поднимаю инфраструктуру"
 docker compose -f "$COMPOSE_FILE" "${PROFILE[@]}" up -d
 
 # minio-init — одноразовый контейнер, он обязан завершиться, а не стать healthy.
-LONG_RUNNING="postgres kafka schema-registry clickhouse redis minio${OBSERVABILITY_SERVICES}"
+LONG_RUNNING="postgres pgbouncer kafka schema-registry clickhouse redis minio${OBSERVABILITY_SERVICES}"
 
 echo "==> Жду готовности (до ${TIMEOUT} с)"
 deadline=$(( $(date +%s) + TIMEOUT ))

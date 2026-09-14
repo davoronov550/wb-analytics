@@ -118,11 +118,59 @@ class ProductRow(Base):
     __table_args__ = (
         UniqueConstraint("wb_id", name="catalog_product_wb_id_key"),
         CheckConstraint("reviews_count >= 0", name="catalog_product_reviews_count_check"),
+        # --- индексы, доставшиеся от Django -------------------------------
+        # Однополевые, без tiebreaker. Оставлены: их удаление — отдельное
+        # решение, которое принимается после T126, когда будет видно, какие
+        # сортировки действительно приходят.
         Index("catalog_pro_price_2d2a4c_idx", "price"),
         Index("catalog_pro_sale_pr_d20a45_idx", "sale_price"),
         Index("catalog_pro_rating_67a263_idx", "rating"),
         Index("catalog_pro_reviews_90b1f9_idx", "reviews_count"),
         Index("catalog_product_source_query_id_1ce1d788", "source_query_id"),
+        # --- индексы под пресеты интерфейса (T125) ------------------------
+        # Каждый повторяет ORDER BY соответствующего пресета целиком, включая
+        # направление каждого уровня и tiebreaker последним. Направления важны
+        # буквально: индекс со смешанными порядками читается только в том
+        # порядке, в котором создан, — прочесть его «наоборот» PostgreSQL может
+        # лишь целиком, инвертировав все уровни сразу. Для
+        # `(sale_price ASC, rating DESC)` обратное чтение даёт
+        # `(sale_price DESC, rating ASC)`, то есть не тот порядок.
+        #
+        # Пять комбинаций вместо всех возможных: пять полей в произвольном
+        # порядке и направлении дают сотни, и индексировать их все нельзя.
+        # Остальные обслуживаются медленнее и логируются (T126).
+        Index(
+            "catalog_product_reviews_wb_idx",
+            text("reviews_count DESC"),
+            text("wb_id ASC"),
+        ),
+        Index(
+            "catalog_product_rating_reviews_wb_idx",
+            text("rating DESC"),
+            text("reviews_count DESC"),
+            text("wb_id ASC"),
+        ),
+        Index(
+            "catalog_product_saleprice_rating_wb_idx",
+            text("sale_price ASC"),
+            text("rating DESC"),
+            text("wb_id ASC"),
+        ),
+        Index(
+            "catalog_product_price_wb_idx",
+            text("price ASC"),
+            text("wb_id ASC"),
+        ),
+        # Collation задана явно. Порядок текста от неё зависит, и индекс,
+        # созданный с одной, а читаемый под `ORDER BY` с другой, просто не
+        # используется — запрос тихо деградирует в сортировку всей выборки.
+        # Имя локали совпадает с умолчанием базы: расхождение здесь не ошибка
+        # времени сборки, а потеря производительности в проде.
+        Index(
+            "catalog_product_name_wb_idx",
+            text('name COLLATE "en_US.utf8" ASC'),
+            text("wb_id ASC"),
+        ),
     )
 
 

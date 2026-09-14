@@ -63,10 +63,31 @@ autoscaling:
     # topic: ingestion.products.observed.v1
     # bootstrapServers: kafka-bootstrap.kafka.svc:9092
 
+# Доступ к базе идёт через PgBouncer (T127).
+#
+# PostgreSQL — процесс на соединение, а каждая реплика каждого сервиса держит
+# свой пул. Девять сервисов исчерпают `max_connections` раньше, чем упрутся в
+# процессор, и пулер здесь не оптимизация, а условие масштабирования репликами.
+#
+# `DB_PGBOUNCER` переключает платформу на `NullPool`: собственный пул поверх
+# пулера удерживает его клиентские слоты и обесценивает мультиплексирование,
+# ради которого пулер и ставится. Флагом, а не выводом из имени хоста — пулер
+# может стоять за любым именем, и догадка выбрала бы стратегию молча.
+#
+# Проверено на живом окружении: под шестьюдесятью параллельными запросами через
+# пулер без запрета prepared statements половина падает с
+# DuplicatePreparedStatementError, с запретом — ни одной ошибки. Запрет живёт в
+# `libs/platform/db.py`; со стороны пулера обязателен `server_reset_query =
+# DISCARD ALL`, и это его конфигурация, кодом не закрывается.
+database:
+  pgbouncer: true
+
 env:
   SERVICE_NAME: catalog
   ENVIRONMENT: production
   LOG_LEVEL: info
+  # Читает `DatabaseSettings.pgbouncer` — см. блок `database` выше.
+  DB_PGBOUNCER: "true"
 
 # Values come from Vault via External Secrets — never from this file.
 secrets:
